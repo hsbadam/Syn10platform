@@ -1,0 +1,27 @@
+{
+  "name": "SYN10 Voice Analysis",
+  "short_name": "SYN10",
+  "description": "Privacy-first voice analysis for cognitive wellness tracking",
+  "start_url": "/voice-analysis/",
+  "display": "standalone",
+  "background_color": "#071B1A",
+  "theme_color": "#43E6D6",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ],
+  "categories": ["health", "medical", "wellness"],
+  "lang": "en",
+  "dir": "ltr"
+}
