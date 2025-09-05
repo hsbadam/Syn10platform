@@ -1,4 +1,4 @@
-/* Enhanced SYN10 Voice Analysis Styles - Professional Implementation */
+/* Final Production-Ready SYN10 Voice Analysis Styles - All Refinements Applied */
 
 * {
     margin: 0;
@@ -38,6 +38,13 @@ body {
     line-height: 1.6;
     overflow-x: hidden;
     min-height: 100vh;
+}
+
+/* Performance Optimizations - Batch animations for GPU efficiency */
+@media (min-width: 769px) {
+    .animate-batch {
+        will-change: transform, opacity;
+    }
 }
 
 /* Hardware Acceleration for Performance */
@@ -216,10 +223,11 @@ body {
     border: 1px solid rgba(67, 230, 214, 0.3);
 }
 
-/* Enhanced Audio Visualizer with Real-time Animation */
+/* Enhanced Audio Visualizer with Dynamic Heights and Browser Compatibility */
 .audio-visualizer {
     display: flex;
-    align-items: center;
+    align-items: flex-end; /* Primary for modern browsers */
+    align-items: end; /* Fallback for older browsers */
     justify-content: center;
     gap: 4px;
     height: 80px;
@@ -228,6 +236,7 @@ body {
     border: 2px solid rgba(67, 230, 214, 0.2);
     border-radius: 15px;
     padding: 20px;
+    position: relative;
 }
 
 .audio-bar {
@@ -243,6 +252,28 @@ body {
 .audio-bar.active {
     animation: audioWave 0.2s ease infinite alternate;
     opacity: 1;
+}
+
+/* Dynamic Audio Bar Heights Based on Intensity */
+.audio-bar[data-intensity="low"] { 
+    height: 30%; 
+    background: linear-gradient(180deg, var(--primary-cyan), rgba(67, 230, 214, 0.7));
+}
+
+.audio-bar[data-intensity="medium"] { 
+    height: 60%; 
+    background: linear-gradient(180deg, var(--primary-cyan), var(--primary-green));
+}
+
+.audio-bar[data-intensity="high"] { 
+    height: 90%; 
+    background: linear-gradient(180deg, var(--primary-green), var(--primary-cyan));
+}
+
+.audio-bar[data-intensity="peak"] { 
+    height: 100%; 
+    background: linear-gradient(180deg, var(--primary-green), var(--primary-gold));
+    box-shadow: 0 0 10px rgba(0, 255, 163, 0.5);
 }
 
 @keyframes audioWave {
@@ -274,9 +305,32 @@ body {
     gap: 20px;
     margin: 30px 0;
     flex-wrap: wrap;
+    position: relative;
 }
 
-/* Recording Progress Indicator */
+/* Prominent Recording Timer with Fixed Z-index */
+.recording-timer {
+    position: absolute;
+    top: -40px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 71, 87, 0.9);
+    color: white;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    box-shadow: 0 5px 15px rgba(255, 71, 87, 0.3);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 10; /* Ensure timer appears above other elements */
+}
+
+.recording-timer.active {
+    opacity: 1;
+}
+
+/* Fixed Recording Progress Indicator */
 .recording-progress {
     position: relative;
     width: 120px;
@@ -294,12 +348,13 @@ body {
     height: 100%;
 }
 
+/* Corrected calculation for 60px radius: 2 * π * 60 = 376.99 */
 .recording-progress-circle {
     stroke: var(--primary-cyan);
     stroke-width: 4;
     fill: none;
-    stroke-dasharray: 377; /* 2 * π * 60 */
-    stroke-dashoffset: 377;
+    stroke-dasharray: 376.99;
+    stroke-dashoffset: 376.99;
     transition: stroke-dashoffset 1s linear;
 }
 
@@ -333,32 +388,32 @@ body {
     min-width: 160px;
 }
 
-/* Performance optimized hover effects */
-.btn::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    opacity: 0;
-    transition: opacity 0.3s;
-    pointer-events: none;
-}
-
+/* Performance optimized button effects using pseudo-elements */
 .btn-primary {
     background: linear-gradient(135deg, var(--primary-cyan), var(--primary-green));
     color: var(--dark-bg);
 }
 
-.btn-primary::after {
-    box-shadow: 0 15px 35px rgba(67, 230, 214, 0.4);
+.btn-primary::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, var(--primary-cyan), var(--primary-green));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.3s;
 }
 
-.btn-primary:hover::after {
+.btn-primary:hover::before {
     opacity: 1;
 }
 
 .btn-primary:hover {
     transform: translateY(-2px);
+    box-shadow: 0 15px 35px rgba(67, 230, 214, 0.4);
 }
 
 /* Recording State Visual Feedback with Pulsing Ring */
@@ -390,6 +445,28 @@ body {
         transform: scale(1.2); 
         opacity: 0; 
     }
+}
+
+/* Recording Complete Animation */
+@keyframes recordingComplete {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); filter: brightness(1.5); }
+    100% { transform: scale(1); }
+}
+
+.recording-complete {
+    animation: recordingComplete 0.6s ease;
+}
+
+/* Error States with Shake Animation */
+.recording-error {
+    animation: shake 0.5s;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    75% { transform: translateX(10px); }
 }
 
 .btn-ready {
@@ -433,6 +510,30 @@ body {
 .btn:focus-visible {
     outline: 2px solid var(--primary-cyan);
     outline-offset: 3px;
+}
+
+/* Touch Feedback for Mobile */
+@media (hover: none) {
+    .btn:active {
+        transform: scale(0.95);
+        transition: transform 0.1s;
+    }
+}
+
+/* Skeleton Loaders for Better UX */
+.skeleton {
+    background: linear-gradient(90deg, 
+        rgba(67, 230, 214, 0.1) 25%, 
+        rgba(67, 230, 214, 0.2) 50%, 
+        rgba(67, 230, 214, 0.1) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 8px;
+}
+
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
 }
 
 /* Loading States with Animated Dots */
@@ -554,6 +655,11 @@ body {
 .metric-card:nth-child(2) { animation-delay: 0.2s; }
 .metric-card:nth-child(3) { animation-delay: 0.3s; }
 .metric-card:nth-child(4) { animation-delay: 0.4s; }
+
+.metric-card.error {
+    border-color: var(--danger);
+    background: rgba(255, 71, 87, 0.05);
+}
 
 @keyframes slideUp {
     from { 
@@ -956,6 +1062,18 @@ body {
     }
 }
 
+/* Optimized Mobile Performance - Allow Critical Animations */
+@media (max-width: 768px) and (hover: none) {
+    .audio-bar { 
+        animation-duration: 0.5s; /* Slower but still present */
+        animation-iteration-count: 1;
+    }
+    
+    .btn-recording::before {
+        animation-duration: 2s; /* Slower pulse on mobile */
+    }
+}
+
 /* Mobile-Specific Enhancements */
 @media (max-width: 768px) {
     .nav {
@@ -1046,6 +1164,12 @@ body {
         width: 95%;
         margin: 10px;
     }
+    
+    .recording-timer {
+        position: static;
+        transform: none;
+        margin-bottom: 10px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -1102,4 +1226,3 @@ body {
         background: rgba(124, 77, 255, 0.95);
     }
 }
-
