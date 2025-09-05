@@ -1,13 +1,318 @@
-SYN10 Voice Analysis
-Dashboard Settings
-🔒 All analysis happens on your device. No data is sent to servers.
-Daily Voice Check
-Record a 60-second reflection to track your cognitive wellness
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYN10 - Voice Analysis</title>
+    <meta name="description" content="Privacy-first voice analysis for cognitive wellness tracking">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#43E6D6">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="SYN10">
+    
+    <!-- Icons -->
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192x192.png">
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- Security Headers -->
+    <meta http-equiv="Permissions-Policy" content="microphone=(self)">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-brand">
+            <span class="logo">SYN10</span>
+            <span class="feature-badge">Voice Analysis</span>
+        </div>
+        <div class="nav-controls">
+            <button id="dashboardBtn" class="nav-btn">Dashboard</button>
+            <button id="settingsBtn" class="nav-btn">Settings</button>
+        </div>
+    </nav>
 
-🎤 Start Recording ⏹️ Stop
-00:00
-Today's Prompt:
-Loading prompt...
+    <!-- Main Section -->
+    <main id="mainSection" class="main-section">
+        <!-- Privacy Notice -->
+        <div class="privacy-notice">
+            <span class="privacy-icon">🔒</span>
+            <span>All analysis happens on your device. No data is sent to servers.</span>
+        </div>
 
-↻ Get New Prompt
-💡 Press Space to record, Ctrl+D for dashboard
+        <!-- Voice Analysis Card -->
+        <div class="voice-card">
+            <h1 class="voice-title">Daily Voice Check</h1>
+            <p class="voice-subtitle">Record a 60-second reflection to track your cognitive wellness</p>
+
+            <!-- Microphone Status -->
+            <div id="micStatus" class="mic-status"></div>
+            <div id="microphoneTip" class="microphone-tip" style="display: none;">
+                Click 'Allow' when your browser asks for microphone permission
+            </div>
+
+            <!-- Audio Visualizer -->
+            <div id="audioVisualizer" class="audio-visualizer" style="display: none;">
+                <div class="audio-bar"></div>
+                <div class="audio-bar"></div>
+                <div class="audio-bar"></div>
+                <div class="audio-bar"></div>
+                <div class="audio-bar"></div>
+                <div class="audio-bar"></div>
+                <div class="audio-bar"></div>
+                <div class="audio-bar"></div>
+            </div>
+
+            <!-- Recording Controls -->
+            <div class="recording-controls">
+                <button id="recordBtn" class="btn btn-primary">
+                    🎤 Start Recording
+                </button>
+                <button id="stopBtn" class="btn btn-secondary" disabled>
+                    ⏹️ Stop
+                </button>
+                <div id="timer" class="timer">00:00</div>
+            </div>
+
+            <!-- Daily Prompt -->
+            <div class="prompt-card">
+                <h3>Today's Prompt:</h3>
+                <p id="dailyPrompt" class="prompt-text">Loading prompt...</p>
+                <button id="newPromptBtn" class="btn btn-outline">
+                    ↻ Get New Prompt
+                </button>
+            </div>
+
+            <!-- Keyboard Shortcuts -->
+            <div class="shortcuts-hint">
+                <span>💡 Press <kbd>Space</kbd> to record, <kbd>Ctrl+D</kbd> for dashboard</span>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="results-section" style="display: none;" aria-live="polite">
+            <h2 class="results-title">Voice Analysis Results</h2>
+            <p class="results-subtitle">Your cognitive wellness indicators</p>
+
+            <!-- Metrics Grid -->
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-icon">🗣️</div>
+                    <div class="metric-value" id="speechRateValue">--</div>
+                    <div class="metric-label">Speech Rate (WPM)</div>
+                    <div class="metric-status" id="speechRateStatus">--</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-icon">⏸️</div>
+                    <div class="metric-value" id="pauseFrequencyValue">--</div>
+                    <div class="metric-label">Pause Frequency</div>
+                    <div class="metric-status" id="pauseFrequencyStatus">--</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-icon">🎵</div>
+                    <div class="metric-value" id="pitchVarianceValue">--</div>
+                    <div class="metric-label">Voice Stability</div>
+                    <div class="metric-status" id="pitchVarianceStatus">--</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-icon">⚡</div>
+                    <div class="metric-value" id="voiceEnergyValue">--</div>
+                    <div class="metric-label">Voice Energy</div>
+                    <div class="metric-status" id="voiceEnergyStatus">--</div>
+                </div>
+            </div>
+
+            <!-- Overall Score -->
+            <div class="wellness-score">
+                <div class="score-circle">
+                    <div class="score-value" id="wellnessScoreValue">--</div>
+                    <div class="score-label">Wellness Score</div>
+                </div>
+                <div class="score-feedback" id="scoreFeedback">
+                    Complete your voice analysis to see personalized insights.
+                </div>
+            </div>
+
+            <!-- Score Explanations -->
+            <div class="explanations-card">
+                <h3>What Changed Today:</h3>
+                <ul id="explanations" class="explanations-list">
+                    <li>Complete your first recording to see insights</li>
+                </ul>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button id="saveResultsBtn" class="btn btn-primary">
+                    💾 Save Results
+                </button>
+                <button id="recordAgainBtn" class="btn btn-outline">
+                    🎤 Record Again
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Dashboard Section -->
+    <section id="dashboardSection" class="dashboard-section" style="display: none;">
+        <div class="dashboard-header">
+            <button class="btn btn-outline" onclick="voiceApp.showMainSection()">
+                ← Back to Recording
+            </button>
+            <h1>Your Voice Wellness Dashboard</h1>
+            <p>Track your cognitive health trends over time</p>
+        </div>
+
+        <!-- Export Controls -->
+        <div class="export-controls">
+            <button id="exportBtn" class="btn btn-primary">
+                📊 Export Data
+            </button>
+            <button id="deleteDataBtn" class="btn btn-danger">
+                🗑️ Delete All Data
+            </button>
+        </div>
+
+        <!-- Dashboard Stats -->
+        <div class="dashboard-stats">
+            <div class="stat-card">
+                <div class="stat-value" id="sessionCount">0</div>
+                <div class="stat-label">Sessions Completed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="currentStreak">0</div>
+                <div class="stat-label">Day Streak</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="averageScore">--</div>
+                <div class="stat-label">Average Score</div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="charts-grid">
+            <div class="chart-card">
+                <h3>Speech Rate Trend</h3>
+                <canvas id="trendChart" width="400" height="200"></canvas>
+            </div>
+            <div class="chart-card">
+                <h3>Voice Energy Levels</h3>
+                <canvas id="energyChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+
+        <!-- Weekly Summary -->
+        <div class="weekly-summary">
+            <h3>Weekly Summary</h3>
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <span class="summary-label">Sessions This Week:</span>
+                    <span class="summary-value" id="weeklySessionCount">0</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Average Score:</span>
+                    <span class="summary-value" id="weeklyAverageScore">--</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Best Day:</span>
+                    <span class="summary-value" id="bestDay">--</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Settings</h2>
+                <button class="modal-close" onclick="voiceApp.hideSettings()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="setting-group">
+                    <h3>Privacy & Data</h3>
+                    <p>All your voice analysis data is stored locally on your device. No data is sent to external servers.</p>
+                    <button id="exportDataBtn" class="btn btn-outline">Export My Data</button>
+                    <button id="deleteAllDataBtn" class="btn btn-danger">Delete All Data</button>
+                </div>
+                
+                <div class="setting-group">
+                    <h3>About Voice Analysis</h3>
+                    <p>This tool analyzes speech patterns for cognitive wellness tracking. It is not intended for medical diagnosis or treatment.</p>
+                    <a href="#" class="link">Learn more about our privacy policy</a>
+                </div>
+
+                <div class="setting-group">
+                    <h3>Accessibility</h3>
+                    <p>Keyboard shortcuts:</p>
+                    <ul>
+                        <li><kbd>Space</kbd> - Start/stop recording</li>
+                        <li><kbd>Ctrl+D</kbd> - Open dashboard</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Install Prompt -->
+    <div id="installPrompt" class="install-prompt" style="display: none;">
+        <div class="install-content">
+            <span class="install-icon">📱</span>
+            <span class="install-text">Install SYN10 for the best experience</span>
+            <button id="installBtn" class="btn btn-primary">Install</button>
+            <button class="install-close">×</button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/audio-analysis.js"></script>
+    <script src="js/demo-mode.js"></script>
+    <script src="js/enhancements.js"></script>
+    <script src="js/app.js"></script>
+
+    <!-- PWA Install Script -->
+    <script>
+        let deferredPrompt;
+        
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            const installPrompt = document.getElementById('installPrompt');
+            if (installPrompt) {
+                installPrompt.style.display = 'flex';
+            }
+        });
+
+        document.getElementById('installBtn')?.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                deferredPrompt = null;
+                
+                const installPrompt = document.getElementById('installPrompt');
+                if (installPrompt) {
+                    installPrompt.style.display = 'none';
+                }
+            }
+        });
+
+        document.querySelector('.install-close')?.addEventListener('click', () => {
+            const installPrompt = document.getElementById('installPrompt');
+            if (installPrompt) {
+                installPrompt.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
