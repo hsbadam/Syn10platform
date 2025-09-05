@@ -953,6 +953,80 @@
         height: 300px;
       }
     }
+      /* Voice Analysis Button */
+    .voice-analysis-cta {
+      text-align: center;
+    }
+
+    .voice-analysis-btn {
+      display: inline-block;
+      background: linear-gradient(135deg, #43E6D6, #00FFA3);
+      color: #000814;
+      text-decoration: none;
+      padding: 20px 30px;
+      border-radius: 25px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      box-shadow: 0 10px 30px rgba(67, 230, 214, 0.3);
+      max-width: 450px;
+      width: 100%;
+    }
+
+    .voice-analysis-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 40px rgba(67, 230, 214, 0.4);
+      color: #000814;
+      text-decoration: none;
+    }
+
+    .btn-content {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .btn-icon {
+      font-size: 28px;
+    }
+
+    .btn-text {
+      flex: 1;
+      text-align: left;
+    }
+
+    .btn-title {
+      display: block;
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .btn-subtitle {
+      display: block;
+      font-size: 14px;
+      opacity: 0.8;
+    }
+
+    .btn-arrow {
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    @media (max-width: 768px) {
+      .btn-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
+      }
+      
+      .btn-text {
+        text-align: center;
+      }
+      
+      .btn-arrow {
+        display: none;
+      }
+    }
   </style>
 </head>
 <body>
@@ -1069,10 +1143,23 @@
       <div style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
         <button class="btn btn-primary" onclick="navigateTo('dashboard')">
           Begin Your Journey →
-        </button>
+                  </button>
         <button class="btn btn-secondary" onclick="navigateTo('demo')">
           Watch Demo
         </button>
+      </div>
+            <!-- Voice Analysis Feature Button -->
+      <div class="voice-analysis-cta" style="margin: 50px 0 30px;">
+        <a href="/voice-analysis/" class="voice-analysis-btn">
+          <div class="btn-content">
+            <span class="btn-icon">🎤</span>
+            <div class="btn-text">
+              <span class="btn-title">Try Voice Analysis</span>
+              <span class="btn-subtitle">Assess your cognitive wellness in 60 seconds</span>
+            </div>
+            <span class="btn-arrow">→</span>
+          </div>
+        </a>
       </div>
       <p style="margin-top: 30px; color: var(--text-muted); font-size: 14px;">
         ✓ No sign-up required &nbsp;&nbsp; ✓ Works offline &nbsp;&nbsp; ✓ Export anytime
