@@ -20,25 +20,40 @@
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
-    <!-- Styles -->
-    <link rel="stylesheet" href="styles.css">
+    <!-- Styles - Updated to use the enhanced CSS file -->
+    <link rel="stylesheet" href="styles-enhanced.css">
     
     <!-- Security Headers -->
     <meta http-equiv="Permissions-Policy" content="microphone=(self)">
 </head>
 <body>
+    <!-- Neural Background Animation (like landing page) -->
+    <div class="neural-bg"></div>
+    
+    <!-- Animated Particles -->
+    <div class="particle-container">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
     <!-- Navigation -->
     <nav class="nav">
-    <div class="nav-brand">
-        <div class="brain-video">
-            <video autoplay loop muted playsinline>
-                <source src="../brain-rotating.mp4" type="video/mp4">
-                <source src="../brain-rotating.webm" type="video/webm">
-            </video>
+        <div class="nav-brand">
+            <div class="brain-video">
+                <video autoplay loop muted playsinline>
+                    <source src="../brain-rotating.mp4" type="video/mp4">
+                    <source src="../brain-rotating.webm" type="video/webm">
+                </video>
+            </div>
+            <span class="logo">SYN10</span>
+            <span class="feature-badge">Voice Analysis</span>
         </div>
-        <span class="logo">SYN10</span>
-        <span class="feature-badge">Voice Analysis</span>
-    </div>
         <div class="nav-controls">
             <button id="dashboardBtn" class="nav-btn">Dashboard</button>
             <button id="settingsBtn" class="nav-btn">Settings</button>
@@ -55,116 +70,157 @@
 
         <!-- Voice Analysis Card -->
         <div class="voice-card">
-            <h1 class="voice-title">Daily Voice Check</h1>
-            <p class="voice-subtitle">Record a 60-second reflection to track your cognitive wellness</p>
+            <div class="voice-card-inner">
+                <h1 class="voice-title">Daily Voice Check</h1>
+                <p class="voice-subtitle">Record a 60-second reflection to track your cognitive wellness</p>
 
-            <!-- Microphone Status -->
-            <div id="micStatus" class="mic-status"></div>
-            <div id="microphoneTip" class="microphone-tip" style="display: none;">
-                Click 'Allow' when your browser asks for microphone permission
-            </div>
+                <!-- Microphone Status -->
+                <div id="micStatus" class="mic-status"></div>
+                <div id="microphoneTip" class="microphone-tip" style="display: none;">
+                    Click 'Allow' when your browser asks for microphone permission
+                </div>
 
-            <!-- Audio Visualizer -->
-            <div id="audioVisualizer" class="audio-visualizer" style="display: none;">
-                <div class="audio-bar"></div>
-                <div class="audio-bar"></div>
-                <div class="audio-bar"></div>
-                <div class="audio-bar"></div>
-                <div class="audio-bar"></div>
-                <div class="audio-bar"></div>
-                <div class="audio-bar"></div>
-                <div class="audio-bar"></div>
-            </div>
+                <!-- Recording Circle Animation -->
+                <div id="recordingCircle" class="recording-circle-container" style="display: none;">
+                    <svg class="recording-circle" viewBox="0 0 200 200">
+                        <defs>
+                            <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#FF4757;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#FF6B7A;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        <circle class="circle-bg" cx="100" cy="100" r="90"/>
+                        <circle class="circle-progress" cx="100" cy="100" r="90" id="progressCircle"/>
+                    </svg>
+                    <div class="circle-content">
+                        <div class="pulse-circle"></div>
+                        <div class="recording-icon">🎤</div>
+                    </div>
+                </div>
 
-            <!-- Recording Controls -->
-            <div class="recording-controls">
-                <button id="recordBtn" class="btn btn-primary">
-                    🎤 Start Recording
-                </button>
-                <button id="stopBtn" class="btn btn-secondary" disabled>
-                    ⏹️ Stop
-                </button>
-                <div id="timer" class="timer">00:00</div>
-            </div>
+                <!-- Audio Visualizer -->
+                <div id="audioVisualizer" class="audio-visualizer" style="display: none;">
+                    <div class="audio-bar"></div>
+                    <div class="audio-bar"></div>
+                    <div class="audio-bar"></div>
+                    <div class="audio-bar"></div>
+                    <div class="audio-bar"></div>
+                    <div class="audio-bar"></div>
+                    <div class="audio-bar"></div>
+                    <div class="audio-bar"></div>
+                    <div class="audio-bar"></div>
+                    <div class="audio-bar"></div>
+                </div>
 
-            <!-- Daily Prompt -->
-            <div class="prompt-card">
-                <h3>Today's Prompt:</h3>
-                <p id="dailyPrompt" class="prompt-text">Loading prompt...</p>
-                <button id="newPromptBtn" class="btn btn-outline">
-                    ↻ Get New Prompt
-                </button>
-            </div>
+                <!-- Recording Controls -->
+                <div class="recording-controls">
+                    <button id="recordBtn" class="btn btn-primary">
+                        <span class="btn-icon">🎤</span>
+                        <span>Start Recording</span>
+                    </button>
+                    <button id="stopBtn" class="btn btn-secondary" disabled>
+                        <span class="btn-icon">⏹️</span>
+                        <span>Stop</span>
+                    </button>
+                    
+                    <!-- Animated Timer -->
+                    <div id="timer" class="timer-container">
+                        <div class="timer-digits">
+                            <span class="timer-digit" id="minute">0</span>
+                            <span class="timer-colon">:</span>
+                            <span class="timer-digit" id="second1">0</span>
+                            <span class="timer-digit" id="second2">0</span>
+                        </div>
+                        <div class="timer-glow"></div>
+                    </div>
+                </div>
 
-            <!-- Keyboard Shortcuts -->
-            <div class="shortcuts-hint">
-                <span>💡 Press <kbd>Space</kbd> to record, <kbd>Ctrl+D</kbd> for dashboard</span>
+                <!-- Daily Prompt -->
+                <div class="prompt-card">
+                    <div class="prompt-inner">
+                        <h3>Today's Prompt:</h3>
+                        <p id="dailyPrompt" class="prompt-text">Loading prompt...</p>
+                        <button id="newPromptBtn" class="btn btn-outline">
+                            <span class="btn-icon">↻</span>
+                            <span>Get New Prompt</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Keyboard Shortcuts -->
+                <div class="shortcuts-hint">
+                    <span>💡 Press <kbd>Space</kbd> to record, <kbd>Ctrl+D</kbd> for dashboard</span>
+                </div>
             </div>
         </div>
 
         <!-- Results Section -->
         <div id="resultsSection" class="results-section" style="display: none;" aria-live="polite">
-            <h2 class="results-title">Voice Analysis Results</h2>
-            <p class="results-subtitle">Your cognitive wellness indicators</p>
+            <div class="results-card">
+                <h2 class="results-title">Voice Analysis Results</h2>
+                <p class="results-subtitle">Your cognitive wellness indicators</p>
 
-            <!-- Metrics Grid -->
-            <div class="metrics-grid">
-                <div class="metric-card">
-                    <div class="metric-icon">🗣️</div>
-                    <div class="metric-value" id="speechRateValue">--</div>
-                    <div class="metric-label">Speech Rate (WPM)</div>
-                    <div class="metric-status" id="speechRateStatus">--</div>
+                <!-- Metrics Grid -->
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-icon">🗣️</div>
+                        <div class="metric-value" id="speechRateValue">--</div>
+                        <div class="metric-label">Speech Rate (WPM)</div>
+                        <div class="metric-status" id="speechRateStatus">--</div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-icon">⏸️</div>
+                        <div class="metric-value" id="pauseFrequencyValue">--</div>
+                        <div class="metric-label">Pause Frequency</div>
+                        <div class="metric-status" id="pauseFrequencyStatus">--</div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-icon">🎵</div>
+                        <div class="metric-value" id="pitchVarianceValue">--</div>
+                        <div class="metric-label">Voice Stability</div>
+                        <div class="metric-status" id="pitchVarianceStatus">--</div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-icon">⚡</div>
+                        <div class="metric-value" id="voiceEnergyValue">--</div>
+                        <div class="metric-label">Voice Energy</div>
+                        <div class="metric-status" id="voiceEnergyStatus">--</div>
+                    </div>
                 </div>
 
-                <div class="metric-card">
-                    <div class="metric-icon">⏸️</div>
-                    <div class="metric-value" id="pauseFrequencyValue">--</div>
-                    <div class="metric-label">Pause Frequency</div>
-                    <div class="metric-status" id="pauseFrequencyStatus">--</div>
+                <!-- Overall Score -->
+                <div class="wellness-score">
+                    <div class="score-circle">
+                        <div class="score-value" id="wellnessScoreValue">--</div>
+                        <div class="score-label">Wellness Score</div>
+                    </div>
+                    <div class="score-feedback" id="scoreFeedback">
+                        Complete your voice analysis to see personalized insights.
+                    </div>
                 </div>
 
-                <div class="metric-card">
-                    <div class="metric-icon">🎵</div>
-                    <div class="metric-value" id="pitchVarianceValue">--</div>
-                    <div class="metric-label">Voice Stability</div>
-                    <div class="metric-status" id="pitchVarianceStatus">--</div>
+                <!-- Score Explanations -->
+                <div class="explanations-card">
+                    <h3>What Changed Today:</h3>
+                    <ul id="explanations" class="explanations-list">
+                        <li>Complete your first recording to see insights</li>
+                    </ul>
                 </div>
 
-                <div class="metric-card">
-                    <div class="metric-icon">⚡</div>
-                    <div class="metric-value" id="voiceEnergyValue">--</div>
-                    <div class="metric-label">Voice Energy</div>
-                    <div class="metric-status" id="voiceEnergyStatus">--</div>
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <button id="saveResultsBtn" class="btn btn-primary">
+                        <span class="btn-icon">💾</span>
+                        <span>Save Results</span>
+                    </button>
+                    <button id="recordAgainBtn" class="btn btn-outline">
+                        <span class="btn-icon">🎤</span>
+                        <span>Record Again</span>
+                    </button>
                 </div>
-            </div>
-
-            <!-- Overall Score -->
-            <div class="wellness-score">
-                <div class="score-circle">
-                    <div class="score-value" id="wellnessScoreValue">--</div>
-                    <div class="score-label">Wellness Score</div>
-                </div>
-                <div class="score-feedback" id="scoreFeedback">
-                    Complete your voice analysis to see personalized insights.
-                </div>
-            </div>
-
-            <!-- Score Explanations -->
-            <div class="explanations-card">
-                <h3>What Changed Today:</h3>
-                <ul id="explanations" class="explanations-list">
-                    <li>Complete your first recording to see insights</li>
-                </ul>
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="action-buttons">
-                <button id="saveResultsBtn" class="btn btn-primary">
-                    💾 Save Results
-                </button>
-                <button id="recordAgainBtn" class="btn btn-outline">
-                    🎤 Record Again
-                </button>
             </div>
         </div>
     </main>
@@ -182,10 +238,12 @@
         <!-- Export Controls -->
         <div class="export-controls">
             <button id="exportBtn" class="btn btn-primary">
-                📊 Export Data
+                <span class="btn-icon">📊</span>
+                <span>Export Data</span>
             </button>
             <button id="deleteDataBtn" class="btn btn-danger">
-                🗑️ Delete All Data
+                <span class="btn-icon">🗑️</span>
+                <span>Delete All Data</span>
             </button>
         </div>
 
@@ -285,6 +343,84 @@
     <script src="js/demo-mode.js"></script>
     <script src="js/enhancements.js"></script>
     <script src="js/app.js"></script>
+
+    <!-- Enhanced Recording Script with Circle Progress -->
+    <script>
+        // Recording Circle Progress Animation
+        let recordingInterval;
+        let secondsElapsed = 0;
+        const maxSeconds = 60;
+        const circumference = 2 * Math.PI * 90; // 2πr where r=90
+
+        function startRecordingAnimation() {
+            document.getElementById('recordingCircle').style.display = 'block';
+            document.getElementById('audioVisualizer').style.display = 'flex';
+            const progressCircle = document.getElementById('progressCircle');
+            secondsElapsed = 0;
+            
+            recordingInterval = setInterval(() => {
+                secondsElapsed++;
+                
+                // Update circle progress
+                const progress = secondsElapsed / maxSeconds;
+                const offset = circumference - (progress * circumference);
+                progressCircle.style.strokeDashoffset = offset;
+                
+                // Update digital timer
+                const mins = Math.floor(secondsElapsed / 60);
+                const secs = secondsElapsed % 60;
+                document.getElementById('minute').textContent = mins;
+                document.getElementById('second1').textContent = Math.floor(secs / 10);
+                document.getElementById('second2').textContent = secs % 10;
+                
+                // Stop at 60 seconds
+                if (secondsElapsed >= maxSeconds) {
+                    stopRecordingAnimation();
+                }
+            }, 1000);
+        }
+        
+        function stopRecordingAnimation() {
+            clearInterval(recordingInterval);
+            document.getElementById('recordingCircle').style.display = 'none';
+            document.getElementById('audioVisualizer').style.display = 'none';
+            
+            // Reset timer display
+            document.getElementById('minute').textContent = '0';
+            document.getElementById('second1').textContent = '0';
+            document.getElementById('second2').textContent = '0';
+            
+            // Reset progress circle
+            const progressCircle = document.getElementById('progressCircle');
+            progressCircle.style.strokeDashoffset = circumference;
+        }
+        
+        // Update record button click handler
+        document.getElementById('recordBtn')?.addEventListener('click', function() {
+            if (!this.classList.contains('recording')) {
+                this.classList.add('recording');
+                this.innerHTML = '<span class="btn-icon">⏹️</span><span>Stop Recording</span>';
+                this.style.background = 'linear-gradient(135deg, #FF4757, #FF6B7A)';
+                document.getElementById('stopBtn').disabled = false;
+                startRecordingAnimation();
+            } else {
+                this.classList.remove('recording');
+                this.innerHTML = '<span class="btn-icon">🎤</span><span>Start Recording</span>';
+                this.style.background = '';
+                document.getElementById('stopBtn').disabled = true;
+                stopRecordingAnimation();
+            }
+        });
+        
+        document.getElementById('stopBtn')?.addEventListener('click', function() {
+            const recordBtn = document.getElementById('recordBtn');
+            recordBtn.classList.remove('recording');
+            recordBtn.innerHTML = '<span class="btn-icon">🎤</span><span>Start Recording</span>';
+            recordBtn.style.background = '';
+            this.disabled = true;
+            stopRecordingAnimation();
+        });
+    </script>
 
     <!-- PWA Install Script -->
     <script>
