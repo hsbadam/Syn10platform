@@ -20,8 +20,8 @@
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
-    <!-- Styles - Updated to use the enhanced CSS file -->
-  <link rel="stylesheet" href="styles.css">
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles.css">
     
     <!-- Security Headers -->
     <meta http-equiv="Permissions-Policy" content="microphone=(self)">
@@ -80,7 +80,7 @@
                     Click 'Allow' when your browser asks for microphone permission
                 </div>
 
-                <!-- Recording Circle Animation -->
+                <!-- Recording Circle Animation with Timer Inside -->
                 <div id="recordingCircle" class="recording-circle-container" style="display: none;">
                     <svg class="recording-circle" viewBox="0 0 200 200">
                         <defs>
@@ -94,7 +94,10 @@
                     </svg>
                     <div class="circle-content">
                         <div class="pulse-circle"></div>
-                        <div class="recording-icon">🎤</div>
+                        <!-- Timer moved inside circle -->
+                        <div class="timer-in-circle">
+                            <span id="minuteCircle">0</span>:<span id="second1Circle">0</span><span id="second2Circle">0</span>
+                        </div>
                     </div>
                 </div>
 
@@ -118,24 +121,19 @@
                         <span class="btn-icon">🎤</span>
                         <span>Start Recording</span>
                     </button>
-                    <button id="stopBtn" class="btn btn-secondary" disabled>
+                    <button id="stopBtn" class="btn btn-secondary" disabled style="display: none;">
                         <span class="btn-icon">⏹️</span>
                         <span>Stop</span>
                     </button>
                     
-                    <!-- Animated Timer -->
-                    <div id="timer" class="timer-container">
-                        <div class="timer-digits">
-                            <span class="timer-digit" id="minute">0</span>
-                            <span class="timer-colon">:</span>
-                            <span class="timer-digit" id="second1">0</span>
-                            <span class="timer-digit" id="second2">0</span>
-                        </div>
-                        <div class="timer-glow"></div>
-                    </div>
+                    <!-- Start Again button (hidden initially) -->
+                    <button id="startAgainBtn" class="btn btn-primary" style="display: none;">
+                        <span class="btn-icon">🔄</span>
+                        <span>Start Again</span>
+                    </button>
                 </div>
 
-                <!-- Daily Prompt -->
+                <!-- Daily Prompt (moved up) -->
                 <div class="prompt-card">
                     <div class="prompt-inner">
                         <h3>Today's Prompt:</h3>
@@ -191,7 +189,7 @@
                     </div>
                 </div>
 
-                <!-- Overall Score -->
+                <!-- Wellness Score - Improved Position -->
                 <div class="wellness-score">
                     <div class="score-circle">
                         <div class="score-value" id="wellnessScoreValue">--</div>
@@ -202,12 +200,32 @@
                     </div>
                 </div>
 
-                <!-- Score Explanations -->
-                <div class="explanations-card">
-                    <h3>What Changed Today:</h3>
-                    <ul id="explanations" class="explanations-list">
-                        <li>Complete your first recording to see insights</li>
-                    </ul>
+                <!-- Redesigned What Changed Today Section -->
+                <div class="insights-section">
+                    <h3 class="insights-title">Today's Insights</h3>
+                    <div class="insights-grid">
+                        <div class="insight-card positive">
+                            <span class="insight-icon">📈</span>
+                            <div class="insight-content">
+                                <h4>Improvements</h4>
+                                <p id="positiveInsight">Voice energy increased by 15%</p>
+                            </div>
+                        </div>
+                        <div class="insight-card neutral">
+                            <span class="insight-icon">💡</span>
+                            <div class="insight-content">
+                                <h4>Observation</h4>
+                                <p id="neutralInsight">Speech pace remains consistent</p>
+                            </div>
+                        </div>
+                        <div class="insight-card tip">
+                            <span class="insight-icon">🎯</span>
+                            <div class="insight-content">
+                                <h4>Recommendation</h4>
+                                <p id="tipInsight">Try speaking more slowly for clarity</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Action Buttons -->
@@ -215,10 +233,6 @@
                     <button id="saveResultsBtn" class="btn btn-primary">
                         <span class="btn-icon">💾</span>
                         <span>Save Results</span>
-                    </button>
-                    <button id="recordAgainBtn" class="btn btn-outline">
-                        <span class="btn-icon">🎤</span>
-                        <span>Record Again</span>
                     </button>
                 </div>
             </div>
@@ -344,19 +358,29 @@
     <script src="js/enhancements.js"></script>
     <script src="js/app.js"></script>
 
-    <!-- Enhanced Recording Script with Circle Progress -->
+    <!-- Enhanced Recording Script with Fixed Timer -->
     <script>
         // Recording Circle Progress Animation
         let recordingInterval;
         let secondsElapsed = 0;
         const maxSeconds = 60;
         const circumference = 2 * Math.PI * 90; // 2πr where r=90
+        let isRecording = false;
 
         function startRecordingAnimation() {
+            if (isRecording) return; // Prevent multiple starts
+            
+            isRecording = true;
             document.getElementById('recordingCircle').style.display = 'block';
             document.getElementById('audioVisualizer').style.display = 'flex';
+            document.getElementById('recordBtn').style.display = 'none';
+            document.getElementById('startAgainBtn').style.display = 'none';
+            
             const progressCircle = document.getElementById('progressCircle');
             secondsElapsed = 0;
+            
+            // Add animation class to circle
+            document.querySelector('.recording-circle').classList.add('animating');
             
             recordingInterval = setInterval(() => {
                 secondsElapsed++;
@@ -366,59 +390,111 @@
                 const offset = circumference - (progress * circumference);
                 progressCircle.style.strokeDashoffset = offset;
                 
-                // Update digital timer
+                // Update timer inside circle
                 const mins = Math.floor(secondsElapsed / 60);
                 const secs = secondsElapsed % 60;
-                document.getElementById('minute').textContent = mins;
-                document.getElementById('second1').textContent = Math.floor(secs / 10);
-                document.getElementById('second2').textContent = secs % 10;
+                document.getElementById('minuteCircle').textContent = mins;
+                document.getElementById('second1Circle').textContent = Math.floor(secs / 10);
+                document.getElementById('second2Circle').textContent = secs % 10;
                 
-                // Stop at 60 seconds
+                // Auto-stop at 60 seconds
                 if (secondsElapsed >= maxSeconds) {
-                    stopRecordingAnimation();
+                    stopRecordingAnimation(true);
                 }
             }, 1000);
         }
         
-        function stopRecordingAnimation() {
+        function stopRecordingAnimation(autoStopped = false) {
             clearInterval(recordingInterval);
-            document.getElementById('recordingCircle').style.display = 'none';
+            isRecording = false;
+            
+            // Remove animation class
+            document.querySelector('.recording-circle').classList.remove('animating');
+            
+            // Stop visualizer animation
             document.getElementById('audioVisualizer').style.display = 'none';
             
-            // Reset timer display
-            document.getElementById('minute').textContent = '0';
-            document.getElementById('second1').textContent = '0';
-            document.getElementById('second2').textContent = '0';
+            if (autoStopped) {
+                // Show "Start Again" button when auto-stopped
+                document.getElementById('startAgainBtn').style.display = 'inline-flex';
+                document.getElementById('recordBtn').style.display = 'none';
+                
+                // Keep circle visible but stop animations
+                const bars = document.querySelectorAll('.audio-bar');
+                bars.forEach(bar => {
+                    bar.style.animation = 'none';
+                });
+            } else {
+                // Manual stop - hide everything
+                document.getElementById('recordingCircle').style.display = 'none';
+                document.getElementById('recordBtn').style.display = 'inline-flex';
+                document.getElementById('startAgainBtn').style.display = 'none';
+                
+                // Reset timer
+                document.getElementById('minuteCircle').textContent = '0';
+                document.getElementById('second1Circle').textContent = '0';
+                document.getElementById('second2Circle').textContent = '0';
+                
+                // Reset progress circle
+                const progressCircle = document.getElementById('progressCircle');
+                progressCircle.style.strokeDashoffset = circumference;
+            }
+        }
+        
+        function resetRecording() {
+            // Hide circle and reset everything
+            document.getElementById('recordingCircle').style.display = 'none';
+            document.getElementById('recordBtn').style.display = 'inline-flex';
+            document.getElementById('startAgainBtn').style.display = 'none';
+            
+            // Reset timer
+            document.getElementById('minuteCircle').textContent = '0';
+            document.getElementById('second1Circle').textContent = '0';
+            document.getElementById('second2Circle').textContent = '0';
             
             // Reset progress circle
             const progressCircle = document.getElementById('progressCircle');
             progressCircle.style.strokeDashoffset = circumference;
+            
+            // Re-enable bar animations
+            const bars = document.querySelectorAll('.audio-bar');
+            bars.forEach((bar, index) => {
+                bar.style.animation = '';
+            });
         }
         
-        // Update record button click handler
-        document.getElementById('recordBtn')?.addEventListener('click', function() {
-            if (!this.classList.contains('recording')) {
-                this.classList.add('recording');
-                this.innerHTML = '<span class="btn-icon">⏹️</span><span>Stop Recording</span>';
-                this.style.background = 'linear-gradient(135deg, #FF4757, #FF6B7A)';
-                document.getElementById('stopBtn').disabled = false;
+        // Single click handler for record button
+        document.getElementById('recordBtn')?.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (!isRecording) {
                 startRecordingAnimation();
-            } else {
-                this.classList.remove('recording');
-                this.innerHTML = '<span class="btn-icon">🎤</span><span>Start Recording</span>';
-                this.style.background = '';
-                document.getElementById('stopBtn').disabled = true;
-                stopRecordingAnimation();
             }
         });
         
-        document.getElementById('stopBtn')?.addEventListener('click', function() {
-            const recordBtn = document.getElementById('recordBtn');
-            recordBtn.classList.remove('recording');
-            recordBtn.innerHTML = '<span class="btn-icon">🎤</span><span>Start Recording</span>';
-            recordBtn.style.background = '';
-            this.disabled = true;
-            stopRecordingAnimation();
+        // Start Again button handler
+        document.getElementById('startAgainBtn')?.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            resetRecording();
+            setTimeout(() => {
+                startRecordingAnimation();
+            }, 100);
+        });
+        
+        // Prevent clicks on visualizer from interfering
+        document.getElementById('audioVisualizer')?.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        });
+        
+        // Stop button handler (if needed)
+        document.getElementById('stopBtn')?.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (isRecording) {
+                stopRecordingAnimation(false);
+            }
         });
     </script>
 
