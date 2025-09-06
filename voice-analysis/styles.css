@@ -1,460 +1,985 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SYN10 - Voice Analysis</title>
-    <meta name="description" content="Privacy-first voice analysis for cognitive wellness tracking">
+/* SYN10 Voice Analysis - Enhanced UI with Animations */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    /* Landing Page Color Palette - Exact Match */
+    --bg-1: #071B1A;
+    --bg-2: #0A2F2C;
+    --bg-3: #0F3A37;
+    --brand: #0E837E;
+    --brand-2: #12B7AA;
+    --primary-cyan: #43E6D6;
+    --primary-green: #00FFA3;
+    --accent-2: #A6FFF6;
+    --danger: #FF4757;
+    --warning: #FFC76B;
+    --success: #00D4AA;
     
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#43E6D6">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="SYN10">
+    /* Background Colors */
+    --bg-primary: #071B1A;
+    --bg-secondary: #0A2F2C;
+    --bg-tertiary: #0F3A37;
+    --surface: rgba(15, 58, 55, 0.6);
+    --surface-glass: rgba(67, 230, 214, 0.02);
     
-    <!-- Icons -->
-    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192x192.png">
-    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+    /* Text Colors */
+    --text-primary: #EAF7F6;
+    --text-secondary: rgba(234, 247, 246, 0.7);
+    --text-muted: rgba(156, 210, 207, 0.5);
     
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, #43E6D6 0%, #00FFA3 100%);
+    --gradient-cyan: linear-gradient(135deg, #43E6D6 0%, #12B7AA 100%);
+    --gradient-cosmic: linear-gradient(135deg, #43E6D6 0%, #00FFA3 50%, #A6FFF6 100%);
+}
+
+/* Base Styles */
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: 
+        radial-gradient(80vw 80vw at 70% -10%, #083331 0%, transparent 60%),
+        radial-gradient(65vw 65vw at -10% 30%, #0A4944 0%, transparent 55%),
+        linear-gradient(180deg, var(--bg-1), var(--bg-2));
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+}
+
+/* Neural Background Animation - Like Landing Page */
+.neural-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+    background: 
+        radial-gradient(2px 2px at 20% 30%, rgba(67, 230, 214, 0.3), transparent),
+        radial-gradient(2px 2px at 40% 70%, rgba(18, 183, 170, 0.2), transparent),
+        radial-gradient(1px 1px at 90% 40%, rgba(67, 230, 214, 0.4), transparent),
+        radial-gradient(1px 1px at 10% 60%, rgba(18, 183, 170, 0.3), transparent),
+        radial-gradient(2px 2px at 60% 20%, rgba(0, 255, 163, 0.2), transparent),
+        radial-gradient(1px 1px at 75% 85%, rgba(67, 230, 214, 0.3), transparent);
+    background-size: 100px 100px, 150px 150px, 80px 80px, 120px 120px, 110px 110px, 90px 90px;
+    animation: neuralMove 30s linear infinite;
+}
+
+@keyframes neuralMove {
+    0% { 
+        background-position: 0% 0%, 0% 0%, 0% 0%, 0% 0%, 0% 0%, 0% 0%; 
+    }
+    100% { 
+        background-position: 100% 100%, -100% 100%, 100% -100%, -100% -100%, 50% 150%, -50% 50%; 
+    }
+}
+
+/* Floating Particles */
+.particle-container {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.particle {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: var(--primary-cyan);
+    border-radius: 50%;
+    opacity: 0.3;
+    animation: float-particle 20s infinite linear;
+    box-shadow: 0 0 10px rgba(67, 230, 214, 0.5);
+}
+
+.particle:nth-child(1) { left: 10%; animation-delay: 0s; animation-duration: 25s; }
+.particle:nth-child(2) { left: 20%; animation-delay: 2s; animation-duration: 22s; }
+.particle:nth-child(3) { left: 35%; animation-delay: 4s; animation-duration: 28s; }
+.particle:nth-child(4) { left: 50%; animation-delay: 6s; animation-duration: 20s; }
+.particle:nth-child(5) { left: 65%; animation-delay: 8s; animation-duration: 24s; }
+.particle:nth-child(6) { left: 75%; animation-delay: 10s; animation-duration: 26s; }
+.particle:nth-child(7) { left: 85%; animation-delay: 12s; animation-duration: 23s; }
+.particle:nth-child(8) { left: 95%; animation-delay: 14s; animation-duration: 27s; }
+
+@keyframes float-particle {
+    0% {
+        transform: translateY(100vh) translateX(0) scale(0);
+        opacity: 0;
+    }
+    10% {
+        opacity: 0.4;
+        transform: translateY(90vh) translateX(-10px) scale(1);
+    }
+    90% {
+        opacity: 0.4;
+        transform: translateY(10vh) translateX(10px) scale(1);
+    }
+    100% {
+        transform: translateY(0) translateX(0) scale(0);
+        opacity: 0;
+    }
+}
+
+/* Navigation - Glassmorphic Premium */
+.nav {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    padding: 1.5rem 2rem;
+    background: rgba(7, 27, 26, 0.7);
+    backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid rgba(67, 230, 214, 0.2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    animation: slideDown 0.6s ease;
+}
+
+.nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+/* Brain Video Container */
+.brain-video {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: transparent;
+    border: 1px solid rgba(67, 230, 214, 0.3);
+    box-shadow: 0 0 20px rgba(67, 230, 214, 0.2);
+    animation: pulse-glow 3s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 20px rgba(67, 230, 214, 0.2); }
+    50% { box-shadow: 0 0 30px rgba(67, 230, 214, 0.4); }
+}
+
+.brain-video video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.logo {
+    font-size: 2rem;
+    font-weight: 900;
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -1px;
+    position: relative;
+    animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+    from { filter: drop-shadow(0 0 20px rgba(67, 230, 214, 0.5)); }
+    to { filter: drop-shadow(0 0 30px rgba(67, 230, 214, 0.8)); }
+}
+
+.feature-badge {
+    padding: 0.25rem 0.75rem;
+    background: rgba(18, 183, 170, 0.2);
+    border: 1px solid rgba(18, 183, 170, 0.5);
+    border-radius: 20px;
+    font-size: 0.875rem;
+    color: var(--brand-2);
+    font-weight: 600;
+}
+
+.nav-controls {
+    display: flex;
+    gap: 1rem;
+}
+
+.nav-btn {
+    padding: 0.75rem 1.5rem;
+    background: rgba(67, 230, 214, 0.05);
+    border: 1px solid rgba(67, 230, 214, 0.2);
+    border-radius: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.nav-btn:hover {
+    background: rgba(67, 230, 214, 0.1);
+    border-color: var(--primary-cyan);
+    color: var(--text-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(67, 230, 214, 0.2);
+}
+
+/* Main Section */
+.main-section {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    animation: fadeInUp 0.8s ease;
+    position: relative;
+    z-index: 2;
+}
+
+/* Voice Card - Premium Glass Design with Inner Beauty */
+.voice-card {
+    background: 
+        radial-gradient(circle at 20% 20%, rgba(67, 230, 214, 0.08), transparent 70%),
+        rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(40px) saturate(200%);
+    border: 1px solid rgba(67, 230, 214, 0.2);
+    border-radius: 32px;
+    padding: 3px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 
+        0 20px 60px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(67, 230, 214, 0.1);
+}
+
+.voice-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, 
+        transparent,
+        var(--primary-cyan),
+        var(--primary-green),
+        transparent
+    );
+    animation: borderGlow 3s linear infinite;
+}
+
+.voice-card-inner {
+    background: linear-gradient(135deg, 
+        rgba(15, 58, 55, 0.9) 0%, 
+        rgba(10, 47, 44, 0.95) 100%);
+    border-radius: 29px;
+    padding: 3rem;
+    position: relative;
+}
+
+.voice-title {
+    font-size: 3rem;
+    font-weight: 800;
+    text-align: center;
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, var(--primary-cyan) 0%, var(--primary-green) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: titleGlow 3s ease-in-out infinite;
+}
+
+@keyframes titleGlow {
+    0%, 100% { filter: brightness(1); }
+    50% { filter: brightness(1.2) drop-shadow(0 0 30px rgba(67, 230, 214, 0.5)); }
+}
+
+.voice-subtitle {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 1.125rem;
+    margin-bottom: 2rem;
+}
+
+/* Microphone Status */
+.mic-status {
+    text-align: center;
+    padding: 0.75rem;
+    margin: 1rem 0;
+    border-radius: 12px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.mic-status.success {
+    background: rgba(0, 212, 170, 0.1);
+    border: 1px solid rgba(0, 212, 170, 0.3);
+    color: var(--success);
+}
+
+.mic-status.error {
+    background: rgba(255, 71, 87, 0.1);
+    border: 1px solid rgba(255, 71, 87, 0.3);
+    color: var(--error);
+}
+
+/* Recording Circle Animation */
+.recording-circle-container {
+    width: 200px;
+    height: 200px;
+    margin: 2rem auto;
+    position: relative;
+    animation: fadeIn 0.5s ease;
+}
+
+.recording-circle {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.circle-bg {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.1);
+    stroke-width: 8;
+}
+
+.circle-progress {
+    fill: none;
+    stroke: #FF4757;
+    stroke-width: 8;
+    stroke-linecap: round;
+    stroke-dasharray: 565.48;
+    stroke-dashoffset: 565.48;
+    transition: stroke-dashoffset 1s linear;
+    filter: drop-shadow(0 0 10px rgba(255, 71, 87, 0.5));
+}
+
+.circle-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+.pulse-circle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 140px;
+    height: 140px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    border-radius: 50%;
+    animation: pulse-recording 2s ease-in-out infinite;
+}
+
+@keyframes pulse-recording {
+    0%, 100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 0.3;
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.1);
+        opacity: 0.1;
+    }
+}
+
+.recording-icon {
+    font-size: 48px;
+    animation: mic-pulse 1s ease-in-out infinite;
+    filter: drop-shadow(0 0 20px rgba(255, 71, 87, 0.5));
+}
+
+@keyframes mic-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+/* Audio Visualizer - Enhanced */
+.audio-visualizer {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 6px;
+    height: 120px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: linear-gradient(135deg, 
+        rgba(0, 0, 0, 0.4) 0%, 
+        rgba(0, 0, 0, 0.2) 100%);
+    border-radius: 20px;
+    position: relative;
+    overflow: hidden;
+    max-width: 400px;
+}
+
+.audio-visualizer::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--gradient-primary);
+    filter: blur(10px);
+    animation: visualizer-glow 2s ease-in-out infinite;
+}
+
+@keyframes visualizer-glow {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}
+
+.audio-bar {
+    width: 8px;
+    min-height: 4px;
+    background: linear-gradient(to top, var(--primary-cyan), var(--primary-green));
+    border-radius: 4px 4px 0 0;
+    transition: height 0.1s ease;
+    position: relative;
+    box-shadow: 0 0 15px rgba(67, 230, 214, 0.5);
+    animation: bar-dance 0.5s ease-in-out infinite;
+}
+
+.audio-bar:nth-child(odd) {
+    animation-delay: 0.1s;
+}
+
+.audio-bar:nth-child(even) {
+    animation-delay: 0.2s;
+}
+
+@keyframes bar-dance {
+    0%, 100% { height: 20px; }
+    50% { height: 60px; }
+}
+
+.audio-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--accent-2);
+    border-radius: 50%;
+    box-shadow: 0 0 10px rgba(166, 255, 246, 0.8);
+}
+
+/* Recording Controls */
+.recording-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+    margin: 3rem 0;
+}
+
+/* Animated Digital Timer */
+.timer-container {
+    position: relative;
+    margin: 2rem auto;
+    width: 200px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.timer-digits {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3.5rem;
+    font-weight: 300;
+    font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: 8px;
+    z-index: 2;
+    position: relative;
+}
+
+.timer-digit {
+    display: inline-block;
+    min-width: 40px;
+    text-align: center;
+    animation: digit-glow 2s ease-in-out infinite;
+}
+
+.timer-colon {
+    animation: blink 1s ease-in-out infinite;
+    margin: 0 5px;
+}
+
+@keyframes digit-glow {
+    0%, 100% { 
+        filter: brightness(1) drop-shadow(0 0 10px rgba(67, 230, 214, 0.5)); 
+    }
+    50% { 
+        filter: brightness(1.2) drop-shadow(0 0 20px rgba(67, 230, 214, 0.8)); 
+    }
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+.timer-glow {
+    position: absolute;
+    inset: -20px;
+    background: radial-gradient(ellipse at center, 
+        rgba(67, 230, 214, 0.1) 0%, 
+        transparent 70%);
+    filter: blur(20px);
+    animation: timer-pulse 2s ease-in-out infinite;
+}
+
+@keyframes timer-pulse {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}
+
+/* Buttons - Enhanced */
+.btn {
+    padding: 1rem 2rem;
+    font-size: 1.125rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: center;
+}
+
+.btn-icon {
+    font-size: 1.2em;
+    display: inline-block;
+}
+
+.btn-primary {
+    background: var(--gradient-primary);
+    color: var(--bg-1);
+    box-shadow: 
+        0 10px 40px rgba(67, 230, 214, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.btn-primary:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 
+        0 20px 60px rgba(67, 230, 214, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.btn-primary:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+.btn-secondary {
+    background: rgba(67, 230, 214, 0.1);
+    color: var(--text-primary);
+    border: 1px solid rgba(67, 230, 214, 0.3);
+    backdrop-filter: blur(10px);
+}
+
+.btn-secondary:hover {
+    background: rgba(67, 230, 214, 0.15);
+    border-color: var(--primary-cyan);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(67, 230, 214, 0.2);
+}
+
+.btn-outline {
+    background: transparent;
+    color: var(--primary-cyan);
+    border: 2px solid var(--primary-cyan);
+}
+
+.btn-outline:hover {
+    background: rgba(67, 230, 214, 0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(67, 230, 214, 0.2);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #EF4444, #DC2626);
+    color: white;
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Prompt Card - Enhanced */
+.prompt-card {
+    background: linear-gradient(135deg, 
+        rgba(18, 183, 170, 0.1) 0%, 
+        rgba(67, 230, 214, 0.05) 100%);
+    border: 1px solid rgba(18, 183, 170, 0.3);
+    border-radius: 20px;
+    padding: 2rem;
+    margin: 2rem 0;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.prompt-inner {
+    position: relative;
+    z-index: 2;
+}
+
+.prompt-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(0, 255, 163, 0.1) 0%, transparent 70%);
+    animation: rotate 20s linear infinite;
+}
+
+@keyframes rotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.prompt-card h3 {
+    color: var(--primary-green);
+    margin-bottom: 1rem;
+    position: relative;
+}
+
+.prompt-text {
+    font-size: 1.25rem;
+    line-height: 1.6;
+    color: var(--text-primary);
+    margin: 1rem 0;
+    position: relative;
+}
+
+/* Shortcuts Hint */
+.shortcuts-hint {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    margin-top: 2rem;
+}
+
+.shortcuts-hint kbd {
+    padding: 0.25rem 0.5rem;
+    background: rgba(67, 230, 214, 0.1);
+    border: 1px solid rgba(67, 230, 214, 0.2);
+    border-radius: 6px;
+    font-family: 'SF Mono', 'Monaco', monospace;
+    margin: 0 0.25rem;
+}
+
+/* Results Section - Enhanced */
+.results-section {
+    margin-top: 3rem;
+    animation: fadeInUp 0.8s ease;
+    position: relative;
+    z-index: 2;
+}
+
+.results-card {
+    background: 
+        radial-gradient(circle at 30% 30%, rgba(67, 230, 214, 0.08), transparent 70%),
+        rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(40px) saturate(200%);
+    border: 1px solid rgba(67, 230, 214, 0.2);
+    border-radius: 32px;
+    padding: 3rem;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.results-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 0.5rem;
+    background: var(--gradient-cosmic);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.results-subtitle {
+    text-align: center;
+    color: var(--text-secondary);
+    margin-bottom: 3rem;
+}
+
+/* Metrics Grid */
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin: 3rem 0;
+}
+
+.metric-card {
+    background: linear-gradient(135deg,
+        rgba(15, 58, 55, 0.6) 0%,
+        rgba(10, 47, 44, 0.7) 100%);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(67, 230, 214, 0.2);
+    border-radius: 24px;
+    padding: 2rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--gradient-primary);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.metric-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 
+        0 20px 60px rgba(0, 0, 0, 0.3),
+        0 0 40px rgba(67, 230, 214, 0.2);
+}
+
+.metric-card:hover::before {
+    transform: scaleX(1);
+}
+
+.metric-icon {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, var(--accent-2), var(--brand-2));
+    box-shadow: 0 10px 30px rgba(67, 230, 214, 0.3);
+    font-size: 35px;
+}
+
+.metric-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 0.5rem 0;
+}
+
+.metric-label {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 0.5rem 0;
+}
+
+.metric-status {
+    color: var(--primary-cyan);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+/* Wellness Score */
+.wellness-score {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 3rem 0;
+    padding: 3rem;
+    background: rgba(15, 58, 55, 0.3);
+    border-radius: 32px;
+    position: relative;
+}
+
+.score-circle {
+    width: 200px;
+    height: 200px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: conic-gradient(
+        from 0deg,
+        var(--primary-cyan) 0deg,
+        var(--primary-green) 180deg,
+        var(--accent-2) 360deg
+    );
+    border-radius: 50%;
+    padding: 4px;
+    box-shadow: 
+        0 0 60px rgba(67, 230, 214, 0.5),
+        inset 0 0 60px rgba(0, 255, 163, 0.3);
+    animation: rotateGlow 10s linear infinite;
+}
+
+@keyframes rotateGlow {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.score-circle::before {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    background: var(--bg-primary);
+    border-radius: 50%;
+    z-index: 1;
+}
+
+.score-value {
+    font-size: 3rem;
+    font-weight: 700;
+    z-index: 2;
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.score-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    z-index: 2;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes borderGlow {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}
+
+/* Privacy Notice */
+.privacy-notice {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    background: linear-gradient(135deg, rgba(67, 230, 214, 0.1) 0%, rgba(0, 255, 163, 0.1) 100%);
+    border: 1px solid rgba(67, 230, 214, 0.3);
+    border-radius: 16px;
+    margin-bottom: 2rem;
+    backdrop-filter: blur(10px);
+    position: relative;
+    overflow: hidden;
+}
+
+.privacy-notice::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(67, 230, 214, 0.1), transparent);
+    animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+.privacy-icon {
+    font-size: 1.5rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .nav {
+        padding: 1rem;
+    }
     
-    <!-- Styles - Updated to use the enhanced CSS file -->
-    <link rel="stylesheet" href="styles-enhanced.css">
+    .voice-card-inner {
+        padding: 2rem 1.5rem;
+    }
     
-    <!-- Security Headers -->
-    <meta http-equiv="Permissions-Policy" content="microphone=(self)">
-</head>
-<body>
-    <!-- Neural Background Animation (like landing page) -->
-    <div class="neural-bg"></div>
+    .timer-digits {
+        font-size: 2.5rem;
+    }
     
-    <!-- Animated Particles -->
-    <div class="particle-container">
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-    </div>
-
-    <!-- Navigation -->
-    <nav class="nav">
-        <div class="nav-brand">
-            <div class="brain-video">
-                <video autoplay loop muted playsinline>
-                    <source src="../brain-rotating.mp4" type="video/mp4">
-                    <source src="../brain-rotating.webm" type="video/webm">
-                </video>
-            </div>
-            <span class="logo">SYN10</span>
-            <span class="feature-badge">Voice Analysis</span>
-        </div>
-        <div class="nav-controls">
-            <button id="dashboardBtn" class="nav-btn">Dashboard</button>
-            <button id="settingsBtn" class="nav-btn">Settings</button>
-        </div>
-    </nav>
-
-    <!-- Main Section -->
-    <main id="mainSection" class="main-section">
-        <!-- Privacy Notice -->
-        <div class="privacy-notice">
-            <span class="privacy-icon">🔒</span>
-            <span>All analysis happens on your device. No data is sent to servers.</span>
-        </div>
-
-        <!-- Voice Analysis Card -->
-        <div class="voice-card">
-            <div class="voice-card-inner">
-                <h1 class="voice-title">Daily Voice Check</h1>
-                <p class="voice-subtitle">Record a 60-second reflection to track your cognitive wellness</p>
-
-                <!-- Microphone Status -->
-                <div id="micStatus" class="mic-status"></div>
-                <div id="microphoneTip" class="microphone-tip" style="display: none;">
-                    Click 'Allow' when your browser asks for microphone permission
-                </div>
-
-                <!-- Recording Circle Animation -->
-                <div id="recordingCircle" class="recording-circle-container" style="display: none;">
-                    <svg class="recording-circle" viewBox="0 0 200 200">
-                        <defs>
-                            <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" style="stop-color:#FF4757;stop-opacity:1" />
-                                <stop offset="100%" style="stop-color:#FF6B7A;stop-opacity:1" />
-                            </linearGradient>
-                        </defs>
-                        <circle class="circle-bg" cx="100" cy="100" r="90"/>
-                        <circle class="circle-progress" cx="100" cy="100" r="90" id="progressCircle"/>
-                    </svg>
-                    <div class="circle-content">
-                        <div class="pulse-circle"></div>
-                        <div class="recording-icon">🎤</div>
-                    </div>
-                </div>
-
-                <!-- Audio Visualizer -->
-                <div id="audioVisualizer" class="audio-visualizer" style="display: none;">
-                    <div class="audio-bar"></div>
-                    <div class="audio-bar"></div>
-                    <div class="audio-bar"></div>
-                    <div class="audio-bar"></div>
-                    <div class="audio-bar"></div>
-                    <div class="audio-bar"></div>
-                    <div class="audio-bar"></div>
-                    <div class="audio-bar"></div>
-                    <div class="audio-bar"></div>
-                    <div class="audio-bar"></div>
-                </div>
-
-                <!-- Recording Controls -->
-                <div class="recording-controls">
-                    <button id="recordBtn" class="btn btn-primary">
-                        <span class="btn-icon">🎤</span>
-                        <span>Start Recording</span>
-                    </button>
-                    <button id="stopBtn" class="btn btn-secondary" disabled>
-                        <span class="btn-icon">⏹️</span>
-                        <span>Stop</span>
-                    </button>
-                    
-                    <!-- Animated Timer -->
-                    <div id="timer" class="timer-container">
-                        <div class="timer-digits">
-                            <span class="timer-digit" id="minute">0</span>
-                            <span class="timer-colon">:</span>
-                            <span class="timer-digit" id="second1">0</span>
-                            <span class="timer-digit" id="second2">0</span>
-                        </div>
-                        <div class="timer-glow"></div>
-                    </div>
-                </div>
-
-                <!-- Daily Prompt -->
-                <div class="prompt-card">
-                    <div class="prompt-inner">
-                        <h3>Today's Prompt:</h3>
-                        <p id="dailyPrompt" class="prompt-text">Loading prompt...</p>
-                        <button id="newPromptBtn" class="btn btn-outline">
-                            <span class="btn-icon">↻</span>
-                            <span>Get New Prompt</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Keyboard Shortcuts -->
-                <div class="shortcuts-hint">
-                    <span>💡 Press <kbd>Space</kbd> to record, <kbd>Ctrl+D</kbd> for dashboard</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Results Section -->
-        <div id="resultsSection" class="results-section" style="display: none;" aria-live="polite">
-            <div class="results-card">
-                <h2 class="results-title">Voice Analysis Results</h2>
-                <p class="results-subtitle">Your cognitive wellness indicators</p>
-
-                <!-- Metrics Grid -->
-                <div class="metrics-grid">
-                    <div class="metric-card">
-                        <div class="metric-icon">🗣️</div>
-                        <div class="metric-value" id="speechRateValue">--</div>
-                        <div class="metric-label">Speech Rate (WPM)</div>
-                        <div class="metric-status" id="speechRateStatus">--</div>
-                    </div>
-
-                    <div class="metric-card">
-                        <div class="metric-icon">⏸️</div>
-                        <div class="metric-value" id="pauseFrequencyValue">--</div>
-                        <div class="metric-label">Pause Frequency</div>
-                        <div class="metric-status" id="pauseFrequencyStatus">--</div>
-                    </div>
-
-                    <div class="metric-card">
-                        <div class="metric-icon">🎵</div>
-                        <div class="metric-value" id="pitchVarianceValue">--</div>
-                        <div class="metric-label">Voice Stability</div>
-                        <div class="metric-status" id="pitchVarianceStatus">--</div>
-                    </div>
-
-                    <div class="metric-card">
-                        <div class="metric-icon">⚡</div>
-                        <div class="metric-value" id="voiceEnergyValue">--</div>
-                        <div class="metric-label">Voice Energy</div>
-                        <div class="metric-status" id="voiceEnergyStatus">--</div>
-                    </div>
-                </div>
-
-                <!-- Overall Score -->
-                <div class="wellness-score">
-                    <div class="score-circle">
-                        <div class="score-value" id="wellnessScoreValue">--</div>
-                        <div class="score-label">Wellness Score</div>
-                    </div>
-                    <div class="score-feedback" id="scoreFeedback">
-                        Complete your voice analysis to see personalized insights.
-                    </div>
-                </div>
-
-                <!-- Score Explanations -->
-                <div class="explanations-card">
-                    <h3>What Changed Today:</h3>
-                    <ul id="explanations" class="explanations-list">
-                        <li>Complete your first recording to see insights</li>
-                    </ul>
-                </div>
-
-                <!-- Action Buttons -->
-                <div class="action-buttons">
-                    <button id="saveResultsBtn" class="btn btn-primary">
-                        <span class="btn-icon">💾</span>
-                        <span>Save Results</span>
-                    </button>
-                    <button id="recordAgainBtn" class="btn btn-outline">
-                        <span class="btn-icon">🎤</span>
-                        <span>Record Again</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <!-- Dashboard Section -->
-    <section id="dashboardSection" class="dashboard-section" style="display: none;">
-        <div class="dashboard-header">
-            <button class="btn btn-outline" onclick="voiceApp.showMainSection()">
-                ← Back to Recording
-            </button>
-            <h1>Your Voice Wellness Dashboard</h1>
-            <p>Track your cognitive health trends over time</p>
-        </div>
-
-        <!-- Export Controls -->
-        <div class="export-controls">
-            <button id="exportBtn" class="btn btn-primary">
-                <span class="btn-icon">📊</span>
-                <span>Export Data</span>
-            </button>
-            <button id="deleteDataBtn" class="btn btn-danger">
-                <span class="btn-icon">🗑️</span>
-                <span>Delete All Data</span>
-            </button>
-        </div>
-
-        <!-- Dashboard Stats -->
-        <div class="dashboard-stats">
-            <div class="stat-card">
-                <div class="stat-value" id="sessionCount">0</div>
-                <div class="stat-label">Sessions Completed</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="currentStreak">0</div>
-                <div class="stat-label">Day Streak</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="averageScore">--</div>
-                <div class="stat-label">Average Score</div>
-            </div>
-        </div>
-
-        <!-- Charts -->
-        <div class="charts-grid">
-            <div class="chart-card">
-                <h3>Speech Rate Trend</h3>
-                <canvas id="trendChart" width="400" height="200"></canvas>
-            </div>
-            <div class="chart-card">
-                <h3>Voice Energy Levels</h3>
-                <canvas id="energyChart" width="400" height="200"></canvas>
-            </div>
-        </div>
-
-        <!-- Weekly Summary -->
-        <div class="weekly-summary">
-            <h3>Weekly Summary</h3>
-            <div class="summary-grid">
-                <div class="summary-item">
-                    <span class="summary-label">Sessions This Week:</span>
-                    <span class="summary-value" id="weeklySessionCount">0</span>
-                </div>
-                <div class="summary-item">
-                    <span class="summary-label">Average Score:</span>
-                    <span class="summary-value" id="weeklyAverageScore">--</span>
-                </div>
-                <div class="summary-item">
-                    <span class="summary-label">Best Day:</span>
-                    <span class="summary-value" id="bestDay">--</span>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Settings Modal -->
-    <div id="settingsModal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Settings</h2>
-                <button class="modal-close" onclick="voiceApp.hideSettings()">×</button>
-            </div>
-            <div class="modal-body">
-                <div class="setting-group">
-                    <h3>Privacy & Data</h3>
-                    <p>All your voice analysis data is stored locally on your device. No data is sent to external servers.</p>
-                    <button id="exportDataBtn" class="btn btn-outline">Export My Data</button>
-                    <button id="deleteAllDataBtn" class="btn btn-danger">Delete All Data</button>
-                </div>
-                
-                <div class="setting-group">
-                    <h3>About Voice Analysis</h3>
-                    <p>This tool analyzes speech patterns for cognitive wellness tracking. It is not intended for medical diagnosis or treatment.</p>
-                    <a href="#" class="link">Learn more about our privacy policy</a>
-                </div>
-
-                <div class="setting-group">
-                    <h3>Accessibility</h3>
-                    <p>Keyboard shortcuts:</p>
-                    <ul>
-                        <li><kbd>Space</kbd> - Start/stop recording</li>
-                        <li><kbd>Ctrl+D</kbd> - Open dashboard</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Install Prompt -->
-    <div id="installPrompt" class="install-prompt" style="display: none;">
-        <div class="install-content">
-            <span class="install-icon">📱</span>
-            <span class="install-text">Install SYN10 for the best experience</span>
-            <button id="installBtn" class="btn btn-primary">Install</button>
-            <button class="install-close">×</button>
-        </div>
-    </div>
-
-    <!-- Scripts -->
-    <script src="js/audio-analysis.js"></script>
-    <script src="js/demo-mode.js"></script>
-    <script src="js/enhancements.js"></script>
-    <script src="js/app.js"></script>
-
-    <!-- Enhanced Recording Script with Circle Progress -->
-    <script>
-        // Recording Circle Progress Animation
-        let recordingInterval;
-        let secondsElapsed = 0;
-        const maxSeconds = 60;
-        const circumference = 2 * Math.PI * 90; // 2πr where r=90
-
-        function startRecordingAnimation() {
-            document.getElementById('recordingCircle').style.display = 'block';
-            document.getElementById('audioVisualizer').style.display = 'flex';
-            const progressCircle = document.getElementById('progressCircle');
-            secondsElapsed = 0;
-            
-            recordingInterval = setInterval(() => {
-                secondsElapsed++;
-                
-                // Update circle progress
-                const progress = secondsElapsed / maxSeconds;
-                const offset = circumference - (progress * circumference);
-                progressCircle.style.strokeDashoffset = offset;
-                
-                // Update digital timer
-                const mins = Math.floor(secondsElapsed / 60);
-                const secs = secondsElapsed % 60;
-                document.getElementById('minute').textContent = mins;
-                document.getElementById('second1').textContent = Math.floor(secs / 10);
-                document.getElementById('second2').textContent = secs % 10;
-                
-                // Stop at 60 seconds
-                if (secondsElapsed >= maxSeconds) {
-                    stopRecordingAnimation();
-                }
-            }, 1000);
-        }
-        
-        function stopRecordingAnimation() {
-            clearInterval(recordingInterval);
-            document.getElementById('recordingCircle').style.display = 'none';
-            document.getElementById('audioVisualizer').style.display = 'none';
-            
-            // Reset timer display
-            document.getElementById('minute').textContent = '0';
-            document.getElementById('second1').textContent = '0';
-            document.getElementById('second2').textContent = '0';
-            
-            // Reset progress circle
-            const progressCircle = document.getElementById('progressCircle');
-            progressCircle.style.strokeDashoffset = circumference;
-        }
-        
-        // Update record button click handler
-        document.getElementById('recordBtn')?.addEventListener('click', function() {
-            if (!this.classList.contains('recording')) {
-                this.classList.add('recording');
-                this.innerHTML = '<span class="btn-icon">⏹️</span><span>Stop Recording</span>';
-                this.style.background = 'linear-gradient(135deg, #FF4757, #FF6B7A)';
-                document.getElementById('stopBtn').disabled = false;
-                startRecordingAnimation();
-            } else {
-                this.classList.remove('recording');
-                this.innerHTML = '<span class="btn-icon">🎤</span><span>Start Recording</span>';
-                this.style.background = '';
-                document.getElementById('stopBtn').disabled = true;
-                stopRecordingAnimation();
-            }
-        });
-        
-        document.getElementById('stopBtn')?.addEventListener('click', function() {
-            const recordBtn = document.getElementById('recordBtn');
-            recordBtn.classList.remove('recording');
-            recordBtn.innerHTML = '<span class="btn-icon">🎤</span><span>Start Recording</span>';
-            recordBtn.style.background = '';
-            this.disabled = true;
-            stopRecordingAnimation();
-        });
-    </script>
-
-    <!-- PWA Install Script -->
-    <script>
-        let deferredPrompt;
-        
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            
-            const installPrompt = document.getElementById('installPrompt');
-            if (installPrompt) {
-                installPrompt.style.display = 'flex';
-            }
-        });
-
-        document.getElementById('installBtn')?.addEventListener('click', async () => {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                deferredPrompt = null;
-                
-                const installPrompt = document.getElementById('installPrompt');
-                if (installPrompt) {
-                    installPrompt.style.display = 'none';
-                }
-            }
-        });
-
-        document.querySelector('.install-close')?.addEventListener('click', () => {
-            const installPrompt = document.getElementById('installPrompt');
-            if (installPrompt) {
-                installPrompt.style.display = 'none';
-            }
-        });
-    </script>
-</body>
-</html>
+    .recording-circle-container {
+        width: 150px;
+        height: 150px;
+    }
+    
+    .metrics-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .voice-title {
+        font-size: 2rem;
+    }
+}
