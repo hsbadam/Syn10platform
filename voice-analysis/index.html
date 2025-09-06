@@ -239,71 +239,106 @@
         </div>
     </main>
 
-    <!-- Dashboard Section -->
+    <!-- Dashboard Section - COMPLETELY REDESIGNED -->
     <section id="dashboardSection" class="dashboard-section" style="display: none;">
-        <div class="dashboard-header">
-            <button class="btn btn-outline" onclick="voiceApp.showMainSection()">
-                ← Back to Recording
-            </button>
-            <h1>Your Voice Wellness Dashboard</h1>
-            <p>Track your cognitive health trends over time</p>
-        </div>
-
-        <!-- Export Controls -->
-        <div class="export-controls">
-            <button id="exportBtn" class="btn btn-primary">
-                <span class="btn-icon">📊</span>
-                <span>Export Data</span>
-            </button>
-            <button id="deleteDataBtn" class="btn btn-danger">
-                <span class="btn-icon">🗑️</span>
-                <span>Delete All Data</span>
-            </button>
-        </div>
-
-        <!-- Dashboard Stats -->
-        <div class="dashboard-stats">
-            <div class="stat-card">
-                <div class="stat-value" id="sessionCount">0</div>
-                <div class="stat-label">Sessions Completed</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="currentStreak">0</div>
-                <div class="stat-label">Day Streak</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="averageScore">--</div>
-                <div class="stat-label">Average Score</div>
-            </div>
-        </div>
-
-        <!-- Charts -->
-        <div class="charts-grid">
-            <div class="chart-card">
-                <h3>Speech Rate Trend</h3>
-                <canvas id="trendChart" width="400" height="200"></canvas>
-            </div>
-            <div class="chart-card">
-                <h3>Voice Energy Levels</h3>
-                <canvas id="energyChart" width="400" height="200"></canvas>
-            </div>
-        </div>
-
-        <!-- Weekly Summary -->
-        <div class="weekly-summary">
-            <h3>Weekly Summary</h3>
-            <div class="summary-grid">
-                <div class="summary-item">
-                    <span class="summary-label">Sessions This Week:</span>
-                    <span class="summary-value" id="weeklySessionCount">0</span>
+        <div class="dashboard-card">
+            <div class="dashboard-card-inner">
+                <div class="dashboard-header">
+                    <h2 class="dashboard-title">Your Voice Wellness Dashboard</h2>
+                    <p class="dashboard-subtitle">Track your cognitive health trends over time</p>
                 </div>
-                <div class="summary-item">
-                    <span class="summary-label">Average Score:</span>
-                    <span class="summary-value" id="weeklyAverageScore">--</span>
+
+                <!-- Quick Stats Row -->
+                <div class="dashboard-stats-row">
+                    <div class="stat-item">
+                        <div class="stat-value" id="sessionCount">0</div>
+                        <div class="stat-label">Sessions Completed</div>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="currentStreak">0</div>
+                        <div class="stat-label">Day Streak</div>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="averageScore">--</div>
+                        <div class="stat-label">Average Score</div>
+                    </div>
                 </div>
-                <div class="summary-item">
-                    <span class="summary-label">Best Day:</span>
-                    <span class="summary-value" id="bestDay">--</span>
+
+                <!-- Trends Section -->
+                <div class="trends-section">
+                    <h3 class="trends-title">Performance Trends</h3>
+                    
+                    <div class="trend-cards">
+                        <div class="trend-card">
+                            <div class="trend-header">
+                                <span class="trend-icon">📈</span>
+                                <span class="trend-name">Speech Rate</span>
+                            </div>
+                            <div class="mini-chart">
+                                <div class="chart-bar" style="height: 40%"></div>
+                                <div class="chart-bar" style="height: 60%"></div>
+                                <div class="chart-bar" style="height: 50%"></div>
+                                <div class="chart-bar" style="height: 70%"></div>
+                                <div class="chart-bar" style="height: 65%"></div>
+                            </div>
+                            <div class="trend-value">125 WPM</div>
+                        </div>
+
+                        <div class="trend-card">
+                            <div class="trend-header">
+                                <span class="trend-icon">⚡</span>
+                                <span class="trend-name">Voice Energy</span>
+                            </div>
+                            <div class="mini-chart">
+                                <div class="chart-bar" style="height: 60%"></div>
+                                <div class="chart-bar" style="height: 65%"></div>
+                                <div class="chart-bar" style="height: 70%"></div>
+                                <div class="chart-bar" style="height: 75%"></div>
+                                <div class="chart-bar" style="height: 80%"></div>
+                            </div>
+                            <div class="trend-value">78%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Weekly Summary -->
+                <div class="weekly-summary-card">
+                    <h3 class="summary-title">This Week</h3>
+                    <div class="summary-items">
+                        <div class="summary-item">
+                            <span class="summary-label">Sessions This Week:</span>
+                            <span class="summary-value" id="weeklySessionCount">5</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Weekly Average:</span>
+                            <span class="summary-value" id="weeklyAverageScore">82%</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Best Day:</span>
+                            <span class="summary-value" id="bestDay">Monday</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="dashboard-actions">
+                    <button id="exportBtn" class="btn btn-export">
+                        <span class="btn-icon">📊</span>
+                        <span>Export Data</span>
+                    </button>
+                    <button id="deleteDataBtn" class="btn btn-delete">
+                        <span class="btn-icon">🗑️</span>
+                        <span>Delete All Data</span>
+                    </button>
+                </div>
+
+                <!-- Back to Recording Link -->
+                <div class="dashboard-footer">
+                    <button class="btn btn-ghost" onclick="voiceApp.showMainSection()">
+                        <span>← Back to Recording</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -495,6 +530,54 @@
             if (isRecording) {
                 stopRecordingAnimation(false);
             }
+        });
+
+        // Dashboard button handler
+        document.getElementById('dashboardBtn')?.addEventListener('click', function() {
+            document.getElementById('mainSection').style.display = 'none';
+            document.getElementById('dashboardSection').style.display = 'block';
+        });
+
+        // Settings button handler
+        document.getElementById('settingsBtn')?.addEventListener('click', function() {
+            document.getElementById('settingsModal').style.display = 'flex';
+        });
+
+        // Voice app functions
+        window.voiceApp = {
+            showMainSection: function() {
+                document.getElementById('dashboardSection').style.display = 'none';
+                document.getElementById('mainSection').style.display = 'block';
+            },
+            hideSettings: function() {
+                document.getElementById('settingsModal').style.display = 'none';
+            }
+        };
+
+        // Load daily prompt
+        const prompts = [
+            "Share a memory that always makes you smile.",
+            "Describe a recent act of kindness you witnessed or experienced.",
+            "What's a tradition or ritual that's meaningful to you?",
+            "Tell me about a place where you feel completely at peace.",
+            "What's something you're grateful for today?",
+            "Describe a skill you'd love to learn and why.",
+            "Share a lesson you learned from a challenging experience.",
+            "What's a small change that made a big difference in your life?",
+            "Describe your ideal Sunday morning.",
+            "What's a book, movie, or song that changed your perspective?"
+        ];
+
+        // Set random prompt on load
+        document.addEventListener('DOMContentLoaded', function() {
+            const randomPrompt = prompts[Math.floor(Math.random() * prompts.length)];
+            document.getElementById('dailyPrompt').textContent = randomPrompt;
+        });
+
+        // New prompt button handler
+        document.getElementById('newPromptBtn')?.addEventListener('click', function() {
+            const randomPrompt = prompts[Math.floor(Math.random() * prompts.length)];
+            document.getElementById('dailyPrompt').textContent = randomPrompt;
         });
     </script>
 
