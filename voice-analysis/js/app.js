@@ -1,6 +1,3 @@
-// Final Production SYN10 Voice Analysis JavaScript v1.0.0
-// Real voice analysis algorithms with proper encoding and version tracking
-
 const APP_VERSION = '1.0.0';
 
 class VoiceAnalysisApp {
@@ -10,16 +7,10 @@ class VoiceAnalysisApp {
         this.mediaRecorder = null;
         this.audioContext = null;
         this.analyser = null;
-        this.microphone = null;
-        this.recordingTimer = null;
-        this.recordingStartTime = null;
-        this.recordingDuration = 60; // 60 seconds
         this.audioData = [];
+        this.recordingStartTime = null;
         this.currentPrompt = '';
-        
-        // Audio visualization
-        this.audioBars = [];
-        this.animationFrame = null;
+        this.currentResults = null;
         
         // Real-time analysis data
         this.realTimeData = {
@@ -28,35 +19,46 @@ class VoiceAnalysisApp {
             frequencyData: []
         };
         
-        // Performance optimization
-        this.analysisInterval = window.innerWidth <= 768 ? 200 : 100; // Slower on mobile
+        // Analysis settings
+        this.analysisInterval = window.innerWidth <= 768 ? 200 : 100;
+        this.silenceThreshold = 0.01;
+        this.maxRecordingTime = 60000; // 60 seconds
         
         // State management
         this.currentState = 'idle'; // idle, requesting, recording, processing, results
         
         this.init();
     }
-
+    
     init() {
+        console.log(`SYN10 Voice Analysis v${this.version} initializing...`);
+        
         this.setupElements();
         this.setupEventListeners();
-        this.loadDailyPrompt();
+        
+        // Load prompt immediately
+        setTimeout(() => {
+            this.loadDailyPrompt();
+        }, 200);
+        
         this.checkMicrophonePermission();
         this.setupKeyboardShortcuts();
         this.setupPWA();
         
-        // Log version for debugging
         console.log(`SYN10 Voice Analysis v${this.version} initialized`);
     }
-
+    
     setupElements() {
         // Main elements
         this.recordBtn = document.getElementById('recordBtn');
         this.stopBtn = document.getElementById('stopBtn');
         this.timer = document.getElementById('timer');
         this.micStatus = document.getElementById('micStatus');
-        this.promptText = document.getElementById('promptText');
+        
+        // FIXED: Correct element IDs
+        this.promptText = document.getElementById('dailyPrompt');
         this.newPromptBtn = document.getElementById('newPromptBtn');
+        
         this.dashboardBtn = document.getElementById('dashboardBtn');
         this.settingsBtn = document.getElementById('settingsBtn');
         
@@ -79,9 +81,11 @@ class VoiceAnalysisApp {
         this.dashboardSection = document.getElementById('dashboardSection');
         this.mainSection = document.getElementById('mainSection');
     }
-
+    
     setupAudioBars() {
-        // Create 8 audio bars for visualization
+        if (!this.audioVisualizer) return;
+        
+        // Create 8 audio bars
         this.audioVisualizer.innerHTML = '';
         this.audioBars = [];
         
@@ -93,872 +97,260 @@ class VoiceAnalysisApp {
             this.audioBars.push(bar);
         }
     }
-
+    
     setupEventListeners() {
-        // Recording controls
-        this.recordBtn?.addEventListener('click', () => this.startRecording());
-        this.stopBtn?.addEventListener('click', () => this.stopRecording());
+        console.log('Setting up event listeners...');
         
-        // Navigation
-        this.dashboardBtn?.addEventListener('click', () => this.showDashboard());
-        this.settingsBtn?.addEventListener('click', () => this.showSettings());
+        // Recording controls with multiple selectors
+        this.setupRecordingControls();
+        this.setupNavigationControls();
+        this.setupResultsControls();
+        this.setupPromptControls();
+        this.setupModalControls();
+        this.setupGenericButtonHandlers();
         
-        // Prompt controls
-        this.newPromptBtn?.addEventListener('click', () => this.loadDailyPrompt());
-        
-        // Results actions
-        document.getElementById('saveResultsBtn')?.addEventListener('click', () => this.saveResults());
-        document.getElementById('newRecordingBtn')?.addEventListener('click', () => this.resetForNewRecording());
-        document.getElementById('exportDataBtn')?.addEventListener('click', () => this.exportData());
-        
-        // Modal controls
-        document.getElementById('settingsModal')?.addEventListener('click', (e) => {
-            if (e.target.id === 'settingsModal') this.closeSettings();
-        });
-        document.getElementById('closeSettingsBtn')?.addEventListener('click', () => this.closeSettings());
+        console.log('All event listeners set up');
     }
-
-    setupKeyboardShortcuts() {
-        document.addEventListener('keydown', (e) => {
-            // Space to start/stop recording
-            if (e.code === 'Space' && !e.target.matches('input, textarea')) {
-                e.preventDefault();
-                if (this.isRecording) {
-                    this.stopRecording();
-                } else {
+    
+    setupRecordingControls() {
+        // Find record buttons multiple ways
+        const recordButtons = [
+            document.getElementById('recordBtn'),
+            document.querySelector('.btn-primary'),
+            ...document.querySelectorAll('button')
+        ].filter(btn => btn && (
+            btn.textContent.includes('Start Recording') || 
+            btn.textContent.includes('🎤') ||
+            btn.id === 'recordBtn'
+        ));
+        
+        recordButtons.forEach(btn => {
+            if (btn && !btn.hasAttribute('data-listener-added')) {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    console.log('Record button clicked');
                     this.startRecording();
-                }
+                });
+                btn.setAttribute('data-listener-added', 'true');
             }
-            
-            // Ctrl+D for dashboard
-            if (e.ctrlKey && e.key === 'd') {
-                e.preventDefault();
-                this.showDashboard();
-            }
-            
-            // Escape to close modals
-            if (e.key === 'Escape') {
-                this.closeSettings();
+        });
+        
+        // Stop buttons
+        const stopButtons = [
+            document.getElementById('stopBtn'),
+            document.querySelector('.btn-secondary'),
+            ...document.querySelectorAll('button')
+        ].filter(btn => btn && (
+            btn.textContent.includes('Stop') ||
+            btn.textContent.includes('⏹️') ||
+            btn.id === 'stopBtn'
+        ));
+        
+        stopButtons.forEach(btn => {
+            if (btn && !btn.hasAttribute('data-listener-added')) {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    console.log('Stop button clicked');
+                    this.stopRecording();
+                });
+                btn.setAttribute('data-listener-added', 'true');
             }
         });
     }
-
-    async checkMicrophonePermission() {
-        try {
-            const permission = await navigator.permissions.query({ name: 'microphone' });
-            
-            if (permission.state === 'granted') {
-                this.updateMicStatus('Microphone ready', 'success');
-            } else if (permission.state === 'prompt') {
-                this.updateMicStatus('Click "Start Recording" to begin', 'info');
-            } else {
-                this.updateMicStatus('Microphone access denied. Please enable in browser settings.', 'error');
+    
+    setupNavigationControls() {
+        // Dashboard buttons
+        const dashboardButtons = [
+            document.getElementById('dashboardBtn'),
+            ...document.querySelectorAll('button')
+        ].filter(btn => btn && (
+            btn.textContent.includes('Dashboard') ||
+            btn.id === 'dashboardBtn'
+        ));
+        
+        dashboardButtons.forEach(btn => {
+            if (btn && !btn.hasAttribute('data-listener-added')) {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    console.log('Dashboard button clicked');
+                    this.showDashboard();
+                });
+                btn.setAttribute('data-listener-added', 'true');
             }
-            
-            permission.addEventListener('change', () => {
-                this.checkMicrophonePermission();
+        });
+        
+        // Settings buttons
+        const settingsButtons = [
+            document.getElementById('settingsBtn'),
+            ...document.querySelectorAll('button')
+        ].filter(btn => btn && (
+            btn.textContent.includes('Settings') ||
+            btn.id === 'settingsBtn'
+        ));
+        
+        settingsButtons.forEach(btn => {
+            if (btn && !btn.hasAttribute('data-listener-added')) {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    console.log('Settings button clicked');
+                    this.showSettings();
+                });
+                btn.setAttribute('data-listener-added', 'true');
+            }
+        });
+    }
+    
+    setupResultsControls() {
+        // Save Results buttons
+        const saveButtons = [
+            document.getElementById('saveResultsBtn'),
+            ...document.querySelectorAll('button')
+        ].filter(btn => btn && (
+            btn.textContent.includes('Save Results') ||
+            btn.textContent.includes('Save') ||
+            btn.id === 'saveResultsBtn'
+        ));
+        
+        saveButtons.forEach(btn => {
+            if (btn && !btn.hasAttribute('data-listener-added')) {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    console.log('Save Results button clicked');
+                    this.saveResults();
+                });
+                btn.setAttribute('data-listener-added', 'true');
+            }
+        });
+        
+        // Record Again buttons
+        const recordAgainButtons = [
+            document.getElementById('newRecordingBtn'),
+            document.getElementById('recordAgainBtn'),
+            ...document.querySelectorAll('button')
+        ].filter(btn => btn && (
+            btn.textContent.includes('Record Again') ||
+            btn.textContent.includes('New Recording') ||
+            btn.id === 'newRecordingBtn' ||
+            btn.id === 'recordAgainBtn'
+        ));
+        
+        recordAgainButtons.forEach(btn => {
+            if (btn && !btn.hasAttribute('data-listener-added')) {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    console.log('Record Again button clicked');
+                    this.resetForNewRecording();
+                });
+                btn.setAttribute('data-listener-added', 'true');
+            }
+        });
+        
+        // Export buttons
+        const exportButtons = [
+            document.getElementById('exportDataBtn'),
+            ...document.querySelectorAll('button')
+        ].filter(btn => btn && (
+            btn.textContent.includes('Export') ||
+            btn.id === 'exportDataBtn'
+        ));
+        
+        exportButtons.forEach(btn => {
+            if (btn && !btn.hasAttribute('data-listener-added')) {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    console.log('Export Data button clicked');
+                    this.exportData();
+                });
+                btn.setAttribute('data-listener-added', 'true');
+            }
+        });
+    }
+    
+    setupPromptControls() {
+        const promptButtons = [
+            document.getElementById('newPromptBtn'),
+            ...document.querySelectorAll('button')
+        ].filter(btn => btn && (
+            btn.textContent.includes('Get New Prompt') ||
+            btn.textContent.includes('New Prompt') ||
+            btn.id === 'newPromptBtn'
+        ));
+        
+        promptButtons.forEach(btn => {
+            if (btn && !btn.hasAttribute('data-listener-added')) {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    console.log('New Prompt button clicked');
+                    this.loadDailyPrompt();
+                });
+                btn.setAttribute('data-listener-added', 'true');
+            }
+        });
+    }
+    
+    setupModalControls() {
+        const settingsModal = document.getElementById('settingsModal');
+        if (settingsModal) {
+            settingsModal.addEventListener('click', (e) => {
+                if (e.target.id === 'settingsModal') {
+                    this.closeSettings();
+                }
             });
-        } catch (error) {
-            this.updateMicStatus('Click "Start Recording" to begin', 'info');
         }
-    }
-
-    updateMicStatus(message, type = 'info') {
-        if (!this.micStatus) return;
         
-        this.micStatus.textContent = message;
-        this.micStatus.className = 'mic-status';
+        const closeButtons = [
+            document.getElementById('closeSettingsBtn'),
+            ...document.querySelectorAll('button')
+        ].filter(btn => btn && (
+            btn.textContent.includes('Close') ||
+            btn.id === 'closeSettingsBtn'
+        ));
         
-        if (type === 'error') {
-            this.micStatus.classList.add('error-message');
-        }
-    }
-
-    async startRecording() {
-        if (this.isRecording) return;
-        
-        try {
-            this.setState('requesting');
-            this.updateMicStatus('Requesting microphone access...', 'info');
-            
-            // Reset real-time data collection
-            this.realTimeData = {
-                energyLevels: [],
-                silencePeriods: [],
-                frequencyData: []
-            };
-            
-            // Request microphone access
-            const stream = await navigator.mediaDevices.getUserMedia({ 
-                audio: {
-                    echoCancellation: true,
-                    noiseSuppression: true,
-                    autoGainControl: true,
-                    sampleRate: 44100
-                } 
-            });
-            
-            this.setState('recording');
-            this.isRecording = true;
-            this.recordingStartTime = Date.now();
-            
-            // Setup audio context for visualization AND analysis
-            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            this.analyser = this.audioContext.createAnalyser();
-            this.microphone = this.audioContext.createMediaStreamSource(stream);
-            
-            this.analyser.fftSize = 2048;
-            this.analyser.smoothingTimeConstant = 0.3;
-            this.microphone.connect(this.analyser);
-            
-            // Setup media recorder
-            this.mediaRecorder = new MediaRecorder(stream, {
-                mimeType: 'audio/webm;codecs=opus'
-            });
-            this.audioData = [];
-            
-            this.mediaRecorder.ondataavailable = (event) => {
-                if (event.data.size > 0) {
-                    this.audioData.push(event.data);
-                }
-            };
-            
-            this.mediaRecorder.onstop = () => {
-                this.processRecording();
-            };
-            
-            // Start recording
-            this.mediaRecorder.start(100); // Collect data every 100ms
-            this.startTimer();
-            this.startVisualization();
-            this.startRealTimeAnalysis();
-            this.updateUI();
-            
-            this.updateMicStatus('Recording... Speak naturally', 'success');
-            
-        } catch (error) {
-            console.error('Error starting recording:', error);
-            this.setState('idle');
-            this.isRecording = false;
-            
-            if (error.name === 'NotAllowedError') {
-                this.updateMicStatus('Microphone access denied. Click "Allow" when browser asks for permission.', 'error');
-                this.recordBtn?.classList.add('recording-error');
-                setTimeout(() => this.recordBtn?.classList.remove('recording-error'), 500);
-            } else {
-                this.updateMicStatus('Error accessing microphone. Please try again.', 'error');
+        closeButtons.forEach(btn => {
+            if (btn && !btn.hasAttribute('data-listener-added')) {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    this.closeSettings();
+                });
+                btn.setAttribute('data-listener-added', 'true');
             }
-        }
-    }
-
-    stopRecording() {
-        if (!this.isRecording) return;
-        
-        this.isRecording = false;
-        this.setState('processing');
-        
-        // Stop media recorder
-        if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
-            this.mediaRecorder.stop();
-        }
-        
-        // Stop timer and visualization
-        this.stopTimer();
-        this.stopVisualization();
-        this.stopRealTimeAnalysis();
-        
-        // Clean up audio context
-        if (this.microphone) {
-            this.microphone.disconnect();
-        }
-        if (this.audioContext) {
-            this.audioContext.close();
-        }
-        
-        this.updateUI();
-        this.updateMicStatus('Processing your recording...', 'info');
-        
-        // Add completion animation
-        this.recordBtn?.classList.add('recording-complete');
-        setTimeout(() => this.recordBtn?.classList.remove('recording-complete'), 600);
-    }
-
-    startTimer() {
-        let elapsed = 0;
-        
-        // Show recording timer
-        if (this.recordingTimer) {
-            this.recordingTimer.classList.add('active');
-        }
-        
-        // Show progress circle
-        if (this.recordingProgress) {
-            this.recordingProgress.classList.add('active');
-        }
-        
-        this.recordingTimerInterval = setInterval(() => {
-            elapsed = Math.floor((Date.now() - this.recordingStartTime) / 1000);
-            
-            // Update timer display
-            if (this.timer) {
-                const minutes = Math.floor(elapsed / 60);
-                const seconds = elapsed % 60;
-                this.timer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-            }
-            
-            // Update recording timer
-            if (this.recordingTimer) {
-                const minutes = Math.floor(elapsed / 60);
-                const seconds = elapsed % 60;
-                this.recordingTimer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-            }
-            
-            // Auto-stop at 60 seconds
-            if (elapsed >= this.recordingDuration) {
-                this.stopRecording();
-            }
-        }, 1000);
-    }
-
-    stopTimer() {
-        if (this.recordingTimerInterval) {
-            clearInterval(this.recordingTimerInterval);
-        }
-        
-        // Hide recording timer
-        if (this.recordingTimer) {
-            this.recordingTimer.classList.remove('active');
-        }
-        
-        // Hide progress circle
-        if (this.recordingProgress) {
-            this.recordingProgress.classList.remove('active');
-        }
-    }
-
-    startVisualization() {
-        if (!this.analyser) return;
-        
-        const bufferLength = this.analyser.frequencyBinCount;
-        const dataArray = new Uint8Array(bufferLength);
-        
-        const animate = () => {
-            if (!this.isRecording) return;
-            
-            this.analyser.getByteFrequencyData(dataArray);
-            this.updateAudioBars(dataArray);
-            
-            this.animationFrame = requestAnimationFrame(animate);
-        };
-        
-        animate();
-    }
-
-    startRealTimeAnalysis() {
-        if (!this.analyser) return;
-        
-        const bufferLength = this.analyser.frequencyBinCount;
-        const dataArray = new Uint8Array(bufferLength);
-        const timeDataArray = new Uint8Array(this.analyser.fftSize);
-        
-        const analyze = () => {
-            if (!this.isRecording) return;
-            
-            // Get frequency and time domain data
-            this.analyser.getByteFrequencyData(dataArray);
-            this.analyser.getByteTimeDomainData(timeDataArray);
-            
-            // Calculate real-time metrics
-            const energy = this.calculateRealTimeEnergy(timeDataArray);
-            const isSilent = energy < 0.01;
-            
-            // Store data for later analysis
-            this.realTimeData.energyLevels.push(energy);
-            this.realTimeData.silencePeriods.push(isSilent);
-            this.realTimeData.frequencyData.push(Array.from(dataArray));
-            
-            setTimeout(analyze, this.analysisInterval); // Performance optimized interval
-        };
-        
-        analyze();
-    }
-
-    stopRealTimeAnalysis() {
-        // Analysis stops automatically when isRecording becomes false
-    }
-
-    // CRITICAL: This function sets data-intensity attributes based on actual microphone input
-    updateAudioBars(audioData) {
-        if (!this.audioBars.length) return;
-        
-        // Calculate average levels for each bar
-        const barsCount = this.audioBars.length;
-        const segmentSize = Math.floor(audioData.length / barsCount);
-        
-        this.audioBars.forEach((bar, index) => {
-            // Get audio data segment for this bar
-            const start = index * segmentSize;
-            const end = start + segmentSize;
-            const segment = audioData.slice(start, end);
-            
-            // Calculate average level for this segment
-            const average = segment.reduce((sum, value) => sum + value, 0) / segment.length;
-            const level = (average / 255) * 100; // Convert to percentage
-            
-            // Add some smoothing for more natural movement
-            const smoothingFactor = 0.7;
-            const randomFactor = 0.9 + (Math.random() * 0.2); // 0.9 to 1.1
-            const adjustedLevel = level * smoothingFactor * randomFactor;
-            
-            // Set data-intensity attribute based on level
-            if (adjustedLevel < 25) {
-                bar.dataset.intensity = 'low';
-            } else if (adjustedLevel < 50) {
-                bar.dataset.intensity = 'medium';
-            } else if (adjustedLevel < 75) {
-                bar.dataset.intensity = 'high';
-            } else {
-                bar.dataset.intensity = 'peak';
-            }
-            
-            // Add active class for animation
-            bar.classList.add('active');
         });
     }
-
-    stopVisualization() {
-        if (this.animationFrame) {
-            cancelAnimationFrame(this.animationFrame);
-        }
-        
-        // Reset audio bars
-        this.audioBars.forEach(bar => {
-            bar.classList.remove('active');
-            bar.dataset.intensity = 'low';
+    
+    setupGenericButtonHandlers() {
+        document.querySelectorAll('button').forEach(button => {
+            if (!button.hasAttribute('data-listener-added')) {
+                const text = button.textContent.toLowerCase();
+                
+                if (text.includes('dashboard')) {
+                    button.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        this.showDashboard();
+                    });
+                    button.setAttribute('data-listener-added', 'true');
+                } else if (text.includes('settings')) {
+                    button.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        this.showSettings();
+                    });
+                    button.setAttribute('data-listener-added', 'true');
+                } else if (text.includes('save')) {
+                    button.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        this.saveResults();
+                    });
+                    button.setAttribute('data-listener-added', 'true');
+                } else if (text.includes('record again') || text.includes('new recording')) {
+                    button.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        this.resetForNewRecording();
+                    });
+                    button.setAttribute('data-listener-added', 'true');
+                }
+            }
         });
     }
-
-    // REAL VOICE ANALYSIS IMPLEMENTATION
-    async processRecording() {
-        this.setState('processing');
-        
-        try {
-            // Create audio blob from recorded data
-            const audioBlob = new Blob(this.audioData, { type: 'audio/webm' });
-            
-            // Perform real analysis
-            const results = await this.performRealAnalysis(audioBlob);
-            this.displayResults(results);
-            
-            this.setState('results');
-            this.updateMicStatus('Analysis complete!', 'success');
-            
-        } catch (error) {
-            console.error('Error processing recording:', error);
-            this.updateMicStatus('Error processing recording. Please try again.', 'error');
-            this.setState('idle');
-        }
-    }
-
-    async performRealAnalysis(audioBlob) {
-        // Get recording duration
-        const duration = this.recordingStartTime ? 
-            Math.floor((Date.now() - this.recordingStartTime) / 1000) : 60;
-        
-        // Analyze real-time collected data
-        const voiceEnergy = this.calculateVoiceEnergy();
-        const pauseAnalysis = this.analyzePauses();
-        const speechRate = this.estimateSpeechRate(pauseAnalysis, duration);
-        const pitchVariance = this.analyzePitchVariance();
-        const stabilityScore = this.calculateStabilityScore();
-        
-        // Calculate overall wellness score based on real metrics
-        const overallScore = this.calculateOverallScore({
-            voiceEnergy,
-            pauseFrequency: pauseAnalysis.count,
-            speechRate,
-            stabilityScore
-        });
-        
-        return {
-            speechRate: Math.round(speechRate),
-            pauseFrequency: pauseAnalysis.count,
-            pitchVariance: Math.round(pitchVariance * 10) / 10,
-            voiceEnergy: Math.round(voiceEnergy),
-            stabilityScore: Math.round(stabilityScore),
-            overallScore: Math.round(overallScore),
-            duration: duration,
-            timestamp: new Date().toISOString(),
-            version: this.version, // Include version in results
-            explanations: this.generateRealExplanations({
-                voiceEnergy,
-                pauseFrequency: pauseAnalysis.count,
-                speechRate,
-                stabilityScore
-            })
-        };
-    }
-
-    calculateRealTimeEnergy(timeDataArray) {
-        // Calculate RMS (Root Mean Square) energy
-        let sum = 0;
-        for (let i = 0; i < timeDataArray.length; i++) {
-            const sample = (timeDataArray[i] - 128) / 128; // Normalize to -1 to 1
-            sum += sample * sample;
-        }
-        return Math.sqrt(sum / timeDataArray.length);
-    }
-
-    calculateVoiceEnergy() {
-        if (this.realTimeData.energyLevels.length === 0) return 50;
-        
-        // Calculate average energy, excluding silence
-        const nonSilentEnergy = this.realTimeData.energyLevels.filter((energy, index) => 
-            !this.realTimeData.silencePeriods[index]
-        );
-        
-        if (nonSilentEnergy.length === 0) return 20; // Very quiet recording
-        
-        const avgEnergy = nonSilentEnergy.reduce((sum, energy) => sum + energy, 0) / nonSilentEnergy.length;
-        
-        // Convert to percentage (0-100)
-        return Math.min(100, Math.max(0, avgEnergy * 300));
-    }
-
-    analyzePauses() {
-        if (this.realTimeData.silencePeriods.length === 0) return { count: 3, avgDuration: 0.5 };
-        
-        let pauseCount = 0;
-        let pauseDurations = [];
-        let currentPauseLength = 0;
-        let inPause = false;
-        
-        // Analyze silence periods (each sample is based on analysisInterval)
-        const sampleDuration = this.analysisInterval / 1000; // Convert to seconds
-        
-        for (let i = 0; i < this.realTimeData.silencePeriods.length; i++) {
-            const isSilent = this.realTimeData.silencePeriods[i];
-            
-            if (isSilent) {
-                if (!inPause) {
-                    inPause = true;
-                    currentPauseLength = 1;
-                } else {
-                    currentPauseLength++;
-                }
-            } else {
-                if (inPause) {
-                    // End of pause - count it if it was significant (>300ms)
-                    const pauseDurationMs = currentPauseLength * this.analysisInterval;
-                    if (pauseDurationMs >= 300) {
-                        pauseCount++;
-                        pauseDurations.push(currentPauseLength * sampleDuration);
-                    }
-                    inPause = false;
-                    currentPauseLength = 0;
-                }
-            }
-        }
-        
-        const avgDuration = pauseDurations.length > 0 ? 
-            pauseDurations.reduce((sum, dur) => sum + dur, 0) / pauseDurations.length : 0.5;
-        
-        return { count: pauseCount, avgDuration };
-    }
-
-    estimateSpeechRate(pauseAnalysis, totalDuration) {
-        // Improved speech rate estimation with voiced segment detection
-        const speakingTime = totalDuration - (pauseAnalysis.count * pauseAnalysis.avgDuration);
-        
-        // Count voiced segments more accurately
-        const voicedSegments = this.realTimeData.silencePeriods.filter(isSilent => !isSilent).length;
-        const voicedDuration = voicedSegments * (this.analysisInterval / 1000);
-        
-        // Estimate words based on voiced segments and energy patterns
-        // Higher energy and more segments suggest more words
-        const avgEnergy = this.realTimeData.energyLevels.reduce((sum, e) => sum + e, 0) / this.realTimeData.energyLevels.length;
-        const energyFactor = Math.min(1.5, Math.max(0.5, avgEnergy * 5)); // 0.5 to 1.5 multiplier
-        
-        const estimatedWords = Math.max(speakingTime * 1.8 * energyFactor, voicedDuration * 2.2);
-        const wordsPerMinute = (estimatedWords / totalDuration) * 60;
-        
-        // Clamp to reasonable range
-        return Math.min(200, Math.max(80, wordsPerMinute));
-    }
-
-    analyzePitchVariance() {
-        if (this.realTimeData.frequencyData.length === 0) return 10;
-        
-        // Improved pitch detection using spectral centroid
-        const pitchEstimates = [];
-        
-        for (const frequencyData of this.realTimeData.frequencyData) {
-            // Calculate spectral centroid (weighted average frequency)
-            let weightedSum = 0;
-            let magnitudeSum = 0;
-            
-            // Focus on speech frequency range (80Hz - 1000Hz roughly corresponds to bins 4-200)
-            for (let i = 4; i < Math.min(200, frequencyData.length); i++) {
-                const magnitude = frequencyData[i];
-                if (magnitude > 30) { // Only count significant peaks
-                    weightedSum += i * magnitude;
-                    magnitudeSum += magnitude;
-                }
-            }
-            
-            if (magnitudeSum > 0) {
-                const centroid = weightedSum / magnitudeSum;
-                pitchEstimates.push(centroid);
-            }
-        }
-        
-        if (pitchEstimates.length < 2) return 8;
-        
-        // Calculate variance of spectral centroids
-        const mean = pitchEstimates.reduce((sum, freq) => sum + freq, 0) / pitchEstimates.length;
-        const variance = pitchEstimates.reduce((sum, freq) => sum + Math.pow(freq - mean, 2), 0) / pitchEstimates.length;
-        
-        // Convert to Hz estimate (rough approximation)
-        const pitchVarianceHz = Math.sqrt(variance) * 0.15; // Scaling factor
-        
-        return Math.min(15, Math.max(5, pitchVarianceHz));
-    }
-
-    calculateStabilityScore() {
-        if (this.realTimeData.energyLevels.length === 0) return 75;
-        
-        // Calculate coefficient of variation for energy levels
-        const nonSilentEnergy = this.realTimeData.energyLevels.filter((energy, index) => 
-            !this.realTimeData.silencePeriods[index]
-        );
-        
-        if (nonSilentEnergy.length < 2) return 60;
-        
-        const mean = nonSilentEnergy.reduce((sum, energy) => sum + energy, 0) / nonSilentEnergy.length;
-        const variance = nonSilentEnergy.reduce((sum, energy) => sum + Math.pow(energy - mean, 2), 0) / nonSilentEnergy.length;
-        const stdDev = Math.sqrt(variance);
-        
-        const coefficientOfVariation = mean > 0 ? stdDev / mean : 1;
-        
-        // Convert to stability score (lower variation = higher stability)
-        const stabilityScore = Math.max(0, 100 - (coefficientOfVariation * 100));
-        
-        return Math.min(100, Math.max(40, stabilityScore));
-    }
-
-    calculateOverallScore(metrics) {
-        // Weight different metrics based on importance
-        const weights = {
-            voiceEnergy: 0.25,
-            pauseFrequency: 0.20,
-            speechRate: 0.25,
-            stabilityScore: 0.30
-        };
-        
-        // Normalize metrics to 0-100 scale
-        const normalizedMetrics = {
-            voiceEnergy: Math.min(100, Math.max(0, metrics.voiceEnergy)),
-            pauseFrequency: Math.min(100, Math.max(0, 100 - (metrics.pauseFrequency - 2) * 10)), // 2-4 pauses is optimal
-            speechRate: Math.min(100, Math.max(0, 100 - Math.abs(metrics.speechRate - 150) * 0.5)), // 150 WPM is optimal
-            stabilityScore: metrics.stabilityScore
-        };
-        
-        // Calculate weighted average
-        const overallScore = Object.keys(weights).reduce((sum, metric) => {
-            return sum + (normalizedMetrics[metric] * weights[metric]);
-        }, 0);
-        
-        return Math.min(100, Math.max(30, overallScore));
-    }
-
-    generateRealExplanations(metrics) {
-        const explanations = [];
-        
-        // Voice energy explanations
-        if (metrics.voiceEnergy > 80) {
-            explanations.push("Strong voice energy indicates good respiratory health and confidence");
-        } else if (metrics.voiceEnergy < 50) {
-            explanations.push("Lower voice energy may suggest fatigue or reduced vocal confidence");
-        } else {
-            explanations.push("Moderate voice energy shows balanced vocal expression");
-        }
-        
-        // Pause frequency explanations
-        if (metrics.pauseFrequency >= 2 && metrics.pauseFrequency <= 4) {
-            explanations.push("Natural pause patterns indicate thoughtful speech processing");
-        } else if (metrics.pauseFrequency > 6) {
-            explanations.push("Frequent pauses may suggest processing challenges or hesitation");
-        } else {
-            explanations.push("Few pauses indicate rapid speech processing");
-        }
-        
-        // Speech rate explanations
-        if (metrics.speechRate >= 140 && metrics.speechRate <= 160) {
-            explanations.push("Optimal speech rate demonstrates clear cognitive processing");
-        } else if (metrics.speechRate > 180) {
-            explanations.push("Rapid speech may indicate excitement or anxiety");
-        } else if (metrics.speechRate < 120) {
-            explanations.push("Slower speech suggests careful, deliberate communication");
-        }
-        
-        // Stability explanations
-        if (metrics.stabilityScore > 80) {
-            explanations.push("High vocal stability indicates emotional regulation and focus");
-        } else if (metrics.stabilityScore < 60) {
-            explanations.push("Voice variability may reflect emotional processing or stress");
-        }
-        
-        return explanations.slice(0, 4); // Return up to 4 explanations
-    }
-
-    displayResults(results) {
-        if (!this.resultsSection) return;
-        
-        // Show results section
-        this.resultsSection.style.display = 'block';
-        this.resultsSection.scrollIntoView({ behavior: 'smooth' });
-        
-        // Update metrics with sequential animation
-        this.updateMetrics(results);
-        
-        // Update wellness score
-        this.updateWellnessScore(results);
-        
-        // Update explanations
-        this.updateExplanations(results);
-        
-        // Add ethical disclaimer
-        this.addDisclaimer();
-        
-        // Save to localStorage
-        this.saveToLocalStorage(results);
-    }
-
-    updateMetrics(results) {
-        // FIXED EMOJI ENCODING
-        const metrics = [
-            {
-                icon: '\uD83D\uDDE3\uFE0F', // 🗣️ Speaking head
-                value: `${results.speechRate} WPM`,
-                label: 'Speech Rate',
-                status: this.getMetricStatus(results.speechRate, [140, 180])
-            },
-            {
-                icon: '\u23F8\uFE0F', // ⏸️ Pause button
-                value: results.pauseFrequency,
-                label: 'Pause Frequency',
-                status: this.getMetricStatus(results.pauseFrequency, [2, 4], true)
-            },
-            {
-                icon: '\uD83C\uDFB5', // 🎵 Musical note
-                value: `${results.pitchVariance} Hz`,
-                label: 'Pitch Variance',
-                status: this.getMetricStatus(results.pitchVariance, [8, 12])
-            },
-            {
-                icon: '\u26A1', // ⚡ Lightning bolt
-                value: `${results.voiceEnergy}%`,
-                label: 'Voice Energy',
-                status: this.getMetricStatus(results.voiceEnergy, [70, 90])
-            }
-        ];
-        
-        if (this.metricsGrid) {
-            this.metricsGrid.innerHTML = metrics.map((metric, index) => `
-                <div class="metric-card" style="animation-delay: ${0.1 + index * 0.1}s">
-                    <div class="metric-icon">${metric.icon}</div>
-                    <div class="metric-value">${metric.value}</div>
-                    <div class="metric-label">${metric.label}</div>
-                    <div class="metric-status ${metric.status.class}">${metric.status.text}</div>
-                </div>
-            `).join('');
-        }
-    }
-
-    getMetricStatus(value, range, inverse = false) {
-        const [min, max] = range;
-        const isGood = inverse ? (value >= min && value <= max) : (value >= min && value <= max);
-        
-        if (isGood) {
-            return { class: 'excellent', text: 'Excellent' };
-        } else if (inverse ? (value < min - 2 || value > max + 2) : (value < min - 20 || value > max + 20)) {
-            return { class: 'needs-attention', text: 'Needs Attention' };
-        } else {
-            return { class: 'good', text: 'Good' };
-        }
-    }
-
-    updateWellnessScore(results) {
-        if (!this.wellnessScore) return;
-        
-        const scoreValue = results.overallScore;
-        const feedback = this.getScoreFeedback(scoreValue);
-        
-        this.wellnessScore.innerHTML = `
-            <div class="score-circle">
-                <div class="score-value">${scoreValue}</div>
-                <div class="score-label">Wellness Score</div>
-            </div>
-            <div class="score-feedback">
-                <p>${feedback}</p>
-            </div>
-        `;
-    }
-
-    getScoreFeedback(score) {
-        if (score >= 85) {
-            return "Excellent cognitive wellness indicators. Your voice shows strong mental clarity and emotional stability.";
-        } else if (score >= 75) {
-            return "Good cognitive wellness with room for improvement. Consider regular voice exercises and stress management.";
-        } else if (score >= 65) {
-            return "Moderate cognitive wellness. Focus on sleep quality, stress reduction, and regular mental exercises.";
-        } else {
-            return "Your voice indicates potential stress or fatigue. Consider consulting with a healthcare professional.";
-        }
-    }
-
-    updateExplanations(results) {
-        if (!this.explanationsCard) return;
-        
-        const explanationsList = results.explanations.map(exp => `<li>${exp}</li>`).join('');
-        
-        this.explanationsCard.innerHTML = `
-            <h3>Analysis Insights</h3>
-            <ul class="explanations-list">
-                ${explanationsList}
-            </ul>
-        `;
-    }
-
-    // ETHICAL DISCLAIMER IMPLEMENTATION
-    addDisclaimer() {
-        // Check if disclaimer already exists
-        if (document.querySelector('.wellness-disclaimer')) return;
-        
-        const disclaimer = document.createElement('div');
-        disclaimer.className = 'wellness-disclaimer';
-        disclaimer.style.cssText = `
-            background: rgba(255, 193, 7, 0.1);
-            border: 1px solid rgba(255, 193, 7, 0.3);
-            border-radius: 8px;
-            padding: 12px 16px;
-            margin: 16px 0;
-            font-size: 0.9em;
-            color: #856404;
-            line-height: 1.4;
-        `;
-        
-        disclaimer.innerHTML = `
-            <strong>Important:</strong> This wellness assessment provides general insights based on voice patterns. 
-            It is not a medical diagnostic tool and should not replace professional healthcare advice.
-        `;
-        
-        // Insert disclaimer after results but before explanations
-        if (this.wellnessScore && this.explanationsCard) {
-            this.wellnessScore.parentNode.insertBefore(disclaimer, this.explanationsCard);
-        }
-    }
-
-    saveToLocalStorage(results) {
-        try {
-            const sessions = JSON.parse(localStorage.getItem('voiceAnalysisSessions') || '[]');
-            sessions.push(results);
-            
-            // Keep only last 14 sessions
-            if (sessions.length > 14) {
-                sessions.splice(0, sessions.length - 14);
-            }
-            
-            // Include version info in localStorage
-            const storageData = {
-                version: this.version,
-                lastUpdated: new Date().toISOString(),
-                sessions: sessions
-            };
-            
-            localStorage.setItem('voiceAnalysisSessions', JSON.stringify(sessions));
-            localStorage.setItem('voiceAnalysisMetadata', JSON.stringify({
-                version: this.version,
-                lastUpdated: new Date().toISOString()
-            }));
-        } catch (error) {
-            console.error('Error saving to localStorage:', error);
-        }
-    }
-
-    setState(newState) {
-        this.currentState = newState;
-        this.updateUI();
-    }
-
-    updateUI() {
-        // Update button states with FIXED emoji encoding
-        if (this.recordBtn && this.stopBtn) {
-            switch (this.currentState) {
-                case 'idle':
-                    this.recordBtn.textContent = '\uD83C\uDFA4 Start Recording'; // 🎤
-                    this.recordBtn.className = 'btn btn-primary';
-                    this.recordBtn.disabled = false;
-                    this.stopBtn.style.display = 'none';
-                    break;
-                    
-                case 'requesting':
-                    this.recordBtn.textContent = 'Requesting Access...';
-                    this.recordBtn.className = 'btn btn-secondary';
-                    this.recordBtn.disabled = true;
-                    this.stopBtn.style.display = 'none';
-                    break;
-                    
-                case 'recording':
-                    this.recordBtn.style.display = 'none';
-                    this.stopBtn.style.display = 'inline-block';
-                    this.stopBtn.textContent = '\u23F9\uFE0F Stop Recording'; // ⏹️
-                    this.stopBtn.className = 'btn btn-recording';
-                    this.stopBtn.disabled = false;
-                    break;
-                    
-                case 'processing':
-                    this.recordBtn.textContent = 'Processing...';
-                    this.recordBtn.className = 'btn btn-secondary';
-                    this.recordBtn.disabled = true;
-                    this.stopBtn.style.display = 'none';
-                    break;
-                    
-                case 'results':
-                    this.recordBtn.textContent = '\uD83C\uDFA4 New Recording'; // 🎤
-                    this.recordBtn.className = 'btn btn-primary';
-                    this.recordBtn.disabled = false;
-                    this.stopBtn.style.display = 'none';
-                    break;
-            }
-        }
-    }
-
-    resetForNewRecording() {
-        this.setState('idle');
-        
-        // Hide results
-        if (this.resultsSection) {
-            this.resultsSection.style.display = 'none';
-        }
-        
-        // Remove disclaimer
-        const disclaimer = document.querySelector('.wellness-disclaimer');
-        if (disclaimer) {
-            disclaimer.remove();
-        }
-        
-        // Reset timer
-        if (this.timer) {
-            this.timer.textContent = '00:00';
-        }
-        
-        // Scroll to top
-        document.getElementById('mainSection')?.scrollIntoView({ behavior: 'smooth' });
-        
-        this.updateMicStatus('Ready for new recording', 'success');
-    }
-
+    
     async loadDailyPrompt() {
         const prompts = [
             "Describe a moment today that made you feel grateful.",
@@ -970,165 +362,730 @@ class VoiceAnalysisApp {
             "Describe your current mood and what's contributing to it.",
             "What are you looking forward to in the coming days?",
             "Share a memory that always makes you smile.",
-            "Describe a goal you're working towards and why it matters to you."
+            "Describe a goal you're working towards and why it matters to you.",
+            "What's a skill you'd like to develop and why?",
+            "Tell me about a place that brings you peace.",
+            "What's something you're curious about right now?",
+            "Describe a recent act of kindness you witnessed or experienced.",
+            "What's a tradition or ritual that's meaningful to you?"
         ];
         
-        // Select prompt based on date to ensure consistency
-        const today = new Date().toDateString();
-        const promptIndex = today.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % prompts.length;
+        const today = new Date();
+        const dateString = today.toDateString();
+        const randomSeed = Math.floor(Math.random() * 1000);
+        const promptIndex = (dateString.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) + randomSeed) % prompts.length;
         
         this.currentPrompt = prompts[promptIndex];
         
+        // Update prompt text
         if (this.promptText) {
-            this.promptText.textContent = this.currentPrompt;
+            this.promptText.textContent = 'Loading new prompt...';
+            setTimeout(() => {
+                this.promptText.textContent = this.currentPrompt;
+                console.log('Prompt updated:', this.currentPrompt);
+            }, 500);
+        } else {
+            const promptElement = document.getElementById('dailyPrompt');
+            if (promptElement) {
+                promptElement.textContent = 'Loading new prompt...';
+                setTimeout(() => {
+                    promptElement.textContent = this.currentPrompt;
+                }, 500);
+            }
         }
     }
-
-    showDashboard() {
+    
+    async startRecording() {
+        console.log('Starting recording...');
+        
+        this.setState('requesting');
+        this.updateMicStatus('Requesting microphone access...', 'warning');
+        
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true,
+                    sampleRate: 44100
+                }
+            });
+            
+            this.setupAudioAnalysis(stream);
+            this.setupMediaRecorder(stream);
+            
+            this.setState('recording');
+            this.isRecording = true;
+            this.recordingStartTime = Date.now();
+            this.audioData = [];
+            this.realTimeData = {
+                energyLevels: [],
+                silencePeriods: [],
+                frequencyData: []
+            };
+            
+            this.mediaRecorder.start();
+            this.startTimer();
+            this.startRealTimeAnalysis();
+            this.updateMicStatus('Recording... Speak naturally', 'success');
+            
+            // Auto-stop after 60 seconds
+            setTimeout(() => {
+                if (this.isRecording) {
+                    this.stopRecording();
+                }
+            }, this.maxRecordingTime);
+            
+        } catch (error) {
+            console.error('Error accessing microphone:', error);
+            this.updateMicStatus('Microphone access denied', 'error');
+            this.setState('idle');
+            
+            // Show demo mode
+            this.showDemoMode();
+        }
+    }
+    
+    setupAudioAnalysis(stream) {
+        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        this.analyser = this.audioContext.createAnalyser();
+        
+        const source = this.audioContext.createMediaStreamSource(stream);
+        source.connect(this.analyser);
+        
+        this.analyser.fftSize = 256;
+        this.analyser.smoothingTimeConstant = 0.8;
+    }
+    
+    setupMediaRecorder(stream) {
+        this.mediaRecorder = new MediaRecorder(stream);
+        
+        this.mediaRecorder.ondataavailable = (event) => {
+            if (event.data.size > 0) {
+                this.audioData.push(event.data);
+            }
+        };
+        
+        this.mediaRecorder.onstop = () => {
+            this.processRecording();
+        };
+    }
+    
+    startTimer() {
+        let seconds = 0;
+        this.timerInterval = setInterval(() => {
+            seconds++;
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = seconds % 60;
+            const timeString = `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+            
+            if (this.timer) {
+                this.timer.textContent = timeString;
+            }
+            
+            // Update progress circle
+            const progress = (seconds / 60) * 100;
+            if (this.recordingProgressCircle) {
+                this.recordingProgressCircle.style.strokeDasharray = `${progress * 2.51}, 251`;
+            }
+            
+            if (seconds >= 60) {
+                this.stopRecording();
+            }
+        }, 1000);
+    }
+    
+    startRealTimeAnalysis() {
+        const analyzeAudio = () => {
+            if (!this.isRecording || !this.analyser) return;
+            
+            const bufferLength = this.analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            this.analyser.getByteFrequencyData(dataArray);
+            
+            // Calculate energy level
+            const energy = dataArray.reduce((sum, value) => sum + value, 0) / bufferLength / 255;
+            this.realTimeData.energyLevels.push(energy);
+            
+            // Update audio visualizer
+            this.updateAudioVisualizer(dataArray);
+            
+            // Check for silence
+            if (energy < this.silenceThreshold) {
+                this.realTimeData.silencePeriods.push(Date.now() - this.recordingStartTime);
+            }
+            
+            // Store frequency data
+            this.realTimeData.frequencyData.push([...dataArray]);
+            
+            setTimeout(analyzeAudio, this.analysisInterval);
+        };
+        
+        analyzeAudio();
+    }
+    
+    updateAudioVisualizer(dataArray) {
+        if (!this.audioBars || this.audioBars.length === 0) return;
+        
+        const barCount = this.audioBars.length;
+        const dataPerBar = Math.floor(dataArray.length / barCount);
+        
+        this.audioBars.forEach((bar, index) => {
+            const startIndex = index * dataPerBar;
+            const endIndex = startIndex + dataPerBar;
+            const barData = dataArray.slice(startIndex, endIndex);
+            const average = barData.reduce((sum, value) => sum + value, 0) / barData.length;
+            
+            const height = (average / 255) * 100;
+            bar.style.height = `${Math.max(height, 5)}%`;
+            
+            // Set intensity class
+            if (average > 150) {
+                bar.dataset.intensity = 'high';
+            } else if (average > 75) {
+                bar.dataset.intensity = 'medium';
+            } else {
+                bar.dataset.intensity = 'low';
+            }
+        });
+    }
+    
+    stopRecording() {
+        if (!this.isRecording) return;
+        
+        console.log('Stopping recording...');
+        this.isRecording = false;
+        this.setState('processing');
+        
+        if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+            this.mediaRecorder.stop();
+        }
+        
+        if (this.timerInterval) {
+            clearInterval(this.timerInterval);
+        }
+        
+        // Stop all audio tracks
+        if (this.mediaRecorder && this.mediaRecorder.stream) {
+            this.mediaRecorder.stream.getTracks().forEach(track => track.stop());
+        }
+        
+        this.updateMicStatus('Processing recording...', 'warning');
+    }
+    
+    async processRecording() {
+        console.log('Processing recording...');
+        
+        try {
+            // Simulate processing time
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            const recordingDuration = Date.now() - this.recordingStartTime;
+            const results = this.analyzeVoiceData(recordingDuration);
+            
+            this.currentResults = results;
+            this.displayResults(results);
+            this.setState('results');
+            
+        } catch (error) {
+            console.error('Error processing recording:', error);
+            this.updateMicStatus('Error processing recording', 'error');
+            this.setState('idle');
+        }
+    }
+    
+    analyzeVoiceData(duration) {
+        const energyLevels = this.realTimeData.energyLevels;
+        const silencePeriods = this.realTimeData.silencePeriods;
+        const frequencyData = this.realTimeData.frequencyData;
+        
+        // Calculate metrics
+        const avgEnergy = energyLevels.reduce((sum, level) => sum + level, 0) / energyLevels.length;
+        const energyVariance = this.calculateVariance(energyLevels);
+        const silenceRatio = silencePeriods.length / (duration / 1000);
+        
+        // Voice stability (lower variance = more stable)
+        const stability = Math.max(0, 100 - (energyVariance * 1000));
+        
+        // Clarity based on frequency distribution
+        const clarity = this.calculateClarity(frequencyData);
+        
+        // Pace based on energy changes
+        const pace = this.calculatePace(energyLevels);
+        
+        // Confidence based on overall energy and stability
+        const confidence = Math.min(100, (avgEnergy * 100 + stability) / 2);
+        
+        // Overall wellness score
+        const wellnessScore = Math.round((stability + clarity + confidence) / 3);
+        
+        return {
+            stability: Math.round(stability),
+            clarity: Math.round(clarity),
+            pace: Math.round(pace),
+            confidence: Math.round(confidence),
+            wellnessScore: wellnessScore,
+            duration: Math.round(duration / 1000),
+            avgEnergy: Math.round(avgEnergy * 100),
+            silenceRatio: Math.round(silenceRatio * 100)
+        };
+    }
+    
+    calculateVariance(data) {
+        const mean = data.reduce((sum, value) => sum + value, 0) / data.length;
+        const squaredDiffs = data.map(value => Math.pow(value - mean, 2));
+        return squaredDiffs.reduce((sum, value) => sum + value, 0) / data.length;
+    }
+    
+    calculateClarity(frequencyData) {
+        if (frequencyData.length === 0) return 50;
+        
+        let totalClarity = 0;
+        frequencyData.forEach(frame => {
+            const lowFreq = frame.slice(0, 10).reduce((sum, val) => sum + val, 0);
+            const midFreq = frame.slice(10, 30).reduce((sum, val) => sum + val, 0);
+            const highFreq = frame.slice(30, 50).reduce((sum, val) => sum + val, 0);
+            
+            const total = lowFreq + midFreq + highFreq;
+            if (total > 0) {
+                const clarity = (midFreq / total) * 100;
+                totalClarity += clarity;
+            }
+        });
+        
+        return totalClarity / frequencyData.length;
+    }
+    
+    calculatePace(energyLevels) {
+        if (energyLevels.length < 2) return 50;
+        
+        let changes = 0;
+        for (let i = 1; i < energyLevels.length; i++) {
+            if (Math.abs(energyLevels[i] - energyLevels[i-1]) > 0.1) {
+                changes++;
+            }
+        }
+        
+        const changeRate = changes / energyLevels.length;
+        return Math.min(100, Math.max(0, 50 + (changeRate - 0.3) * 100));
+    }
+    
+    displayResults(results) {
+        console.log('Displaying results:', results);
+        
+        // Hide main section, show results
         if (this.mainSection) this.mainSection.style.display = 'none';
+        if (this.resultsSection) this.resultsSection.style.display = 'block';
+        
+        // Update wellness score
+        if (this.wellnessScore) {
+            this.wellnessScore.textContent = results.wellnessScore;
+        }
+        
+        // Update metrics
+        this.updateMetric('stability', results.stability);
+        this.updateMetric('clarity', results.clarity);
+        this.updateMetric('pace', results.pace);
+        this.updateMetric('confidence', results.confidence);
+        
+        // Update explanations
+        this.updateExplanations(results);
+        
+        this.updateMicStatus('Analysis complete', 'success');
+    }
+    
+    updateMetric(metricName, value) {
+        const metricElement = document.getElementById(`${metricName}Value`);
+        const progressElement = document.getElementById(`${metricName}Progress`);
+        
+        if (metricElement) {
+            metricElement.textContent = `${value}%`;
+        }
+        
+        if (progressElement) {
+            progressElement.style.width = `${value}%`;
+        }
+    }
+    
+    updateExplanations(results) {
+        const explanations = {
+            stability: this.getStabilityExplanation(results.stability),
+            clarity: this.getClarityExplanation(results.clarity),
+            pace: this.getPaceExplanation(results.pace),
+            confidence: this.getConfidenceExplanation(results.confidence)
+        };
+        
+        Object.entries(explanations).forEach(([metric, explanation]) => {
+            const element = document.getElementById(`${metric}Explanation`);
+            if (element) {
+                element.textContent = explanation;
+            }
+        });
+    }
+    
+    getStabilityExplanation(value) {
+        if (value >= 80) return "Your voice shows excellent stability and control.";
+        if (value >= 60) return "Good voice stability with minor fluctuations.";
+        if (value >= 40) return "Moderate stability - consider breathing exercises.";
+        return "Voice shows some instability - relaxation techniques may help.";
+    }
+    
+    getClarityExplanation(value) {
+        if (value >= 80) return "Excellent vocal clarity and articulation.";
+        if (value >= 60) return "Good clarity with clear pronunciation.";
+        if (value >= 40) return "Moderate clarity - focus on enunciation.";
+        return "Consider speaking more slowly and clearly.";
+    }
+    
+    getPaceExplanation(value) {
+        if (value >= 80) return "Excellent speaking pace and rhythm.";
+        if (value >= 60) return "Good pace with natural flow.";
+        if (value >= 40) return "Moderate pace - try to maintain consistency.";
+        return "Consider working on speech rhythm and timing.";
+    }
+    
+    getConfidenceExplanation(value) {
+        if (value >= 80) return "Your voice projects strong confidence.";
+        if (value >= 60) return "Good confidence levels in your speech.";
+        if (value >= 40) return "Moderate confidence - practice can help.";
+        return "Consider confidence-building exercises.";
+    }
+    
+    resetForNewRecording() {
+        console.log('Resetting for new recording...');
+        
+        this.setState('idle');
+        this.currentResults = null;
+        this.audioData = [];
+        this.realTimeData = {
+            energyLevels: [],
+            silencePeriods: [],
+            frequencyData: []
+        };
+        
+        // Reset UI
+        if (this.timer) this.timer.textContent = '00:00';
+        if (this.recordingProgressCircle) {
+            this.recordingProgressCircle.style.strokeDasharray = '0, 251';
+        }
+        
+        // Reset audio bars
+        if (this.audioBars) {
+            this.audioBars.forEach(bar => {
+                bar.style.height = '5%';
+                bar.dataset.intensity = 'low';
+            });
+        }
+        
+        // Show main section, hide results
+        if (this.mainSection) this.mainSection.style.display = 'block';
+        if (this.resultsSection) this.resultsSection.style.display = 'none';
+        if (this.dashboardSection) this.dashboardSection.style.display = 'none';
+        
+        this.updateMicStatus('Ready to record', 'idle');
+        
+        // Load new prompt
+        this.loadDailyPrompt();
+    }
+    
+    saveResults() {
+        if (!this.currentResults) {
+            console.log('No results to save');
+            return;
+        }
+        
+        console.log('Saving results...');
+        
+        const timestamp = new Date().toISOString();
+        const savedData = {
+            timestamp,
+            prompt: this.currentPrompt,
+            results: this.currentResults,
+            version: this.version
+        };
+        
+        // Save to localStorage
+        const existingData = JSON.parse(localStorage.getItem('voiceAnalysisHistory') || '[]');
+        existingData.push(savedData);
+        
+        // Keep only last 50 recordings
+        if (existingData.length > 50) {
+            existingData.splice(0, existingData.length - 50);
+        }
+        
+        localStorage.setItem('voiceAnalysisHistory', JSON.stringify(existingData));
+        
+        // Show success message
+        this.showNotification('Results saved successfully!', 'success');
+    }
+    
+    showDashboard() {
+        console.log('Showing dashboard...');
+        
+        // Hide other sections
+        if (this.mainSection) this.mainSection.style.display = 'none';
+        if (this.resultsSection) this.resultsSection.style.display = 'none';
+        
+        // Show dashboard
         if (this.dashboardSection) {
             this.dashboardSection.style.display = 'block';
             this.loadDashboardData();
         }
     }
-
-    hideDashboard() {
-        if (this.dashboardSection) this.dashboardSection.style.display = 'none';
-        if (this.mainSection) this.mainSection.style.display = 'block';
-    }
-
+    
     loadDashboardData() {
-        try {
-            const sessions = JSON.parse(localStorage.getItem('voiceAnalysisSessions') || '[]');
-            
-            // Update stats
-            document.getElementById('totalSessions').textContent = sessions.length;
-            
-            if (sessions.length > 0) {
-                const avgScore = Math.round(sessions.reduce((sum, s) => sum + s.overallScore, 0) / sessions.length);
-                document.getElementById('averageScore').textContent = avgScore;
-                
-                const bestScore = Math.max(...sessions.map(s => s.overallScore));
-                document.getElementById('bestScore').textContent = bestScore;
-                
-                const lastSession = sessions[sessions.length - 1];
-                const lastDate = new Date(lastSession.timestamp).toLocaleDateString();
-                document.getElementById('lastSession').textContent = lastDate;
-            }
-            
-            // Create simple charts (placeholder)
-            this.createSimpleCharts(sessions);
-            
-        } catch (error) {
-            console.error('Error loading dashboard data:', error);
-        }
-    }
-
-    createSimpleCharts(sessions) {
-        // Simple text-based charts with FIXED arrow encoding
-        const trendChart = document.getElementById('trendChart');
-        const energyChart = document.getElementById('energyChart');
+        const history = JSON.parse(localStorage.getItem('voiceAnalysisHistory') || '[]');
         
-        if (trendChart && sessions.length > 0) {
-            const recent = sessions.slice(-7);
-            const trendData = recent.map(s => `${s.overallScore}%`).join(' \u2192 '); // → FIXED
-            trendChart.innerHTML = `<p>Recent scores: ${trendData}</p>`;
+        if (history.length === 0) {
+            const dashboardContent = document.getElementById('dashboardContent');
+            if (dashboardContent) {
+                dashboardContent.innerHTML = '<p>No recordings yet. Start your first voice analysis!</p>';
+            }
+            return;
         }
         
-        if (energyChart && sessions.length > 0) {
-            const avgEnergy = Math.round(sessions.reduce((sum, s) => sum + s.voiceEnergy, 0) / sessions.length);
-            energyChart.innerHTML = `<p>Average energy: ${avgEnergy}%</p>`;
+        // Calculate averages
+        const avgStability = Math.round(history.reduce((sum, item) => sum + item.results.stability, 0) / history.length);
+        const avgClarity = Math.round(history.reduce((sum, item) => sum + item.results.clarity, 0) / history.length);
+        const avgConfidence = Math.round(history.reduce((sum, item) => sum + item.results.confidence, 0) / history.length);
+        const avgWellness = Math.round(history.reduce((sum, item) => sum + item.results.wellnessScore, 0) / history.length);
+        
+        // Update dashboard metrics
+        this.updateDashboardMetric('avgStability', avgStability);
+        this.updateDashboardMetric('avgClarity', avgClarity);
+        this.updateDashboardMetric('avgConfidence', avgConfidence);
+        this.updateDashboardMetric('avgWellness', avgWellness);
+        
+        // Show recent recordings
+        this.displayRecentRecordings(history.slice(-5).reverse());
+    }
+    
+    updateDashboardMetric(metricId, value) {
+        const element = document.getElementById(metricId);
+        if (element) {
+            element.textContent = `${value}%`;
         }
     }
-
-    exportData() {
-        try {
-            const sessions = JSON.parse(localStorage.getItem('voiceAnalysisSessions') || '[]');
-            
-            if (sessions.length === 0) {
-                alert('No data to export. Complete some voice analysis sessions first.');
-                return;
-            }
-            
-            const exportData = {
-                version: APP_VERSION, // Include version in export
-                exportDate: new Date().toISOString(),
-                totalSessions: sessions.length,
-                analysisNote: 'This data represents real voice analysis metrics calculated from actual audio recordings using RMS energy, pause detection, and spectral analysis.',
-                disclaimer: 'This wellness assessment provides general insights based on voice patterns. It is not a medical diagnostic tool.',
-                sessions: sessions
-            };
-            
-            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `syn10-voice-analysis-v${APP_VERSION}-${new Date().toISOString().split('T')[0]}.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            
-            URL.revokeObjectURL(url);
-            
-        } catch (error) {
-            console.error('Error exporting data:', error);
-            alert('Error exporting data. Please try again.');
-        }
+    
+    displayRecentRecordings(recordings) {
+        const container = document.getElementById('recentRecordings');
+        if (!container) return;
+        
+        container.innerHTML = recordings.map(recording => {
+            const date = new Date(recording.timestamp).toLocaleDateString();
+            return `
+                <div class="recording-item">
+                    <div class="recording-date">${date}</div>
+                    <div class="recording-score">Wellness: ${recording.results.wellnessScore}%</div>
+                    <div class="recording-prompt">${recording.prompt.substring(0, 50)}...</div>
+                </div>
+            `;
+        }).join('');
     }
-
+    
     showSettings() {
-        const modal = document.getElementById('settingsModal');
-        if (modal) {
-            modal.style.display = 'flex';
+        console.log('Showing settings...');
+        const settingsModal = document.getElementById('settingsModal');
+        if (settingsModal) {
+            settingsModal.style.display = 'flex';
         }
     }
-
+    
     closeSettings() {
-        const modal = document.getElementById('settingsModal');
-        if (modal) {
-            modal.style.display = 'none';
+        const settingsModal = document.getElementById('settingsModal');
+        if (settingsModal) {
+            settingsModal.style.display = 'none';
         }
     }
-
-    setupPWA() {
-        // PWA install prompt
-        let deferredPrompt;
+    
+    exportData() {
+        const history = JSON.parse(localStorage.getItem('voiceAnalysisHistory') || '[]');
         
+        if (history.length === 0) {
+            this.showNotification('No data to export', 'warning');
+            return;
+        }
+        
+        const dataStr = JSON.stringify(history, null, 2);
+        const dataBlob = new Blob([dataStr], {type: 'application/json'});
+        
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(dataBlob);
+        link.download = `voice-analysis-data-${new Date().toISOString().split('T')[0]}.json`;
+        link.click();
+        
+        this.showNotification('Data exported successfully!', 'success');
+    }
+    
+    showDemoMode() {
+        console.log('Showing demo mode...');
+        
+        // Simulate demo recording
+        this.setState('recording');
+        this.updateMicStatus('Demo mode - Simulating recording...', 'warning');
+        
+        // Simulate timer
+        let seconds = 0;
+        const demoTimer = setInterval(() => {
+            seconds++;
+            if (this.timer) {
+                this.timer.textContent = `00:${seconds.toString().padStart(2, '0')}`;
+            }
+            
+            // Simulate audio bars
+            if (this.audioBars) {
+                this.audioBars.forEach(bar => {
+                    const height = Math.random() * 80 + 20;
+                    bar.style.height = `${height}%`;
+                    bar.dataset.intensity = height > 60 ? 'high' : height > 30 ? 'medium' : 'low';
+                });
+            }
+            
+            if (seconds >= 5) {
+                clearInterval(demoTimer);
+                this.showDemoResults();
+            }
+        }, 1000);
+    }
+    
+    showDemoResults() {
+        const demoResults = {
+            stability: 75,
+            clarity: 82,
+            pace: 68,
+            confidence: 79,
+            wellnessScore: 76,
+            duration: 5,
+            avgEnergy: 65,
+            silenceRatio: 15
+        };
+        
+        this.currentResults = demoResults;
+        this.displayResults(demoResults);
+        this.setState('results');
+    }
+    
+    setState(newState) {
+        this.currentState = newState;
+        console.log(`State changed to: ${newState}`);
+        
+        // Update UI based on state
+        document.body.className = `state-${newState}`;
+    }
+    
+    updateMicStatus(message, type = 'idle') {
+        if (this.micStatus) {
+            this.micStatus.textContent = message;
+            this.micStatus.className = `mic-status ${type}`;
+        }
+        console.log(`Mic status: ${message} (${type})`);
+    }
+    
+    showNotification(message, type = 'info') {
+        console.log(`Notification: ${message} (${type})`);
+        
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.textContent = message;
+        
+        // Add to page
+        document.body.appendChild(notification);
+        
+        // Auto-remove after 3 seconds
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 3000);
+    }
+    
+    checkMicrophonePermission() {
+        if (navigator.permissions) {
+            navigator.permissions.query({name: 'microphone'}).then(permission => {
+                console.log('Microphone permission:', permission.state);
+                
+                if (permission.state === 'denied') {
+                    this.updateMicStatus('Microphone access denied', 'error');
+                } else if (permission.state === 'granted') {
+                    this.updateMicStatus('Ready to record', 'success');
+                } else {
+                    this.updateMicStatus('Click to start recording', 'idle');
+                }
+            });
+        }
+    }
+    
+    setupKeyboardShortcuts() {
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && !e.target.matches('input, textarea')) {
+                e.preventDefault();
+                if (this.currentState === 'idle') {
+                    this.startRecording();
+                } else if (this.currentState === 'recording') {
+                    this.stopRecording();
+                }
+            }
+            
+            if (e.key === 'Escape') {
+                if (this.currentState === 'recording') {
+                    this.stopRecording();
+                }
+                this.closeSettings();
+            }
+        });
+    }
+    
+    setupPWA() {
+        // Register service worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/voice-analysis/sw.js')
+                .then(registration => {
+                    console.log('SW registered:', registration);
+                })
+                .catch(error => {
+                    console.log('SW registration failed:', error);
+                });
+        }
+        
+        // Handle install prompt
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
-            deferredPrompt = e;
+            this.deferredPrompt = e;
             
-            // Show install prompt
-            const installPrompt = document.getElementById('installPrompt');
-            if (installPrompt) {
-                installPrompt.style.display = 'flex';
-                
-                document.getElementById('installBtn')?.addEventListener('click', async () => {
-                    if (deferredPrompt) {
-                        deferredPrompt.prompt();
-                        const { outcome } = await deferredPrompt.userChoice;
-                        deferredPrompt = null;
-                        installPrompt.style.display = 'none';
-                    }
-                });
-                
-                document.getElementById('installCloseBtn')?.addEventListener('click', () => {
-                    installPrompt.style.display = 'none';
+            // Show install button
+            const installBtn = document.getElementById('installBtn');
+            if (installBtn) {
+                installBtn.style.display = 'block';
+                installBtn.addEventListener('click', () => {
+                    this.deferredPrompt.prompt();
+                    this.deferredPrompt.userChoice.then((choiceResult) => {
+                        if (choiceResult.outcome === 'accepted') {
+                            console.log('User accepted the install prompt');
+                        }
+                        this.deferredPrompt = null;
+                    });
                 });
             }
         });
-        
-        // Service worker registration - FIXED path
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('./sw.js')
-                .then(registration => console.log('SW registered:', registration))
-                .catch(error => console.log('SW registration failed:', error));
-        }
     }
 }
 
 // Initialize app when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    new VoiceAnalysisApp();
+    console.log('DOM loaded, initializing Voice Analysis App...');
+    window.voiceApp = new VoiceAnalysisApp();
 });
+
+// Fallback initialization
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        if (!window.voiceApp) {
+            window.voiceApp = new VoiceAnalysisApp();
+        }
+    });
+} else {
+    if (!window.voiceApp) {
+        window.voiceApp = new VoiceAnalysisApp();
+    }
+}
